@@ -4,10 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BookOpen, Loader2, Eye, EyeOff, AlertCircle } from "lucide-react";
-import { isSupabaseClientConfigured } from "@/lib/authEnv";
 import { loginWithEmailAndPassword, requestEmailLoginLink } from "@/lib/authAccounts";
 
-export function LoginForm({ roleHint }: { roleHint: string | null }) {
+export function LoginForm() {
   const router = useRouter();
 
   const [identifier, setIdentifier] = useState("");
@@ -16,8 +15,6 @@ export function LoginForm({ roleHint }: { roleHint: string | null }) {
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
   const [showPass, setShowPass] = useState(false);
-
-  const liveAuth = isSupabaseClientConfigured();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,19 +60,6 @@ export function LoginForm({ roleHint }: { roleHint: string | null }) {
         </div>
 
         <div className="card">
-          {!liveAuth && (
-            <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 flex items-start gap-2">
-              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-              <div>
-                <p className="font-bold">Canlı giriş altyapısı yapılandırılmamış</p>
-                <p className="mt-1">
-                  Giriş yapabilmek için Supabase ortam değişkenlerini tanımlayın.
-                  Hazır test hesapları artık kullanılmıyor.
-                </p>
-              </div>
-            </div>
-          )}
-
           <form onSubmit={handleLogin} className="space-y-4">
             {error && (
               <div className="p-3 bg-red-50 text-red-700 border border-red-200 rounded-lg text-sm font-medium flex items-start gap-2">
@@ -98,7 +82,7 @@ export function LoginForm({ roleHint }: { roleHint: string | null }) {
                 required
                 autoComplete="email"
                 className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all"
-                placeholder={roleHint ? `${roleHint} hesabınızın e-postası` : "ornek@email.com"}
+                placeholder="adiniz@alanadiniz.com"
               />
             </div>
             <div>

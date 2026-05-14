@@ -43,11 +43,11 @@ export default function Home() {
             Hem yüz yüze hem online dersleriniz için eksiksiz LMS, ödeme takibi, AI koçluk ve veli-öğretmen iletişim platformu.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
-            <Link href="/login?role=teacher" className="btn btn-primary justify-center">
+            <Link href="/register" className="btn btn-primary justify-center">
               <Users className="w-5 h-5" /> Eğitmen Olarak Katıl
             </Link>
-            <Link href="/login?role=parent" className="btn btn-outline justify-center">
-              Veli / Öğrenci Girişi
+            <Link href="/login" className="btn btn-outline justify-center">
+              Hesabına Giriş Yap
             </Link>
           </div>
 

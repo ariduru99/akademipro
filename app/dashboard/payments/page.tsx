@@ -14,6 +14,7 @@ import {
   Building2,
 } from "lucide-react";
 import { getPaymentInfo, useProfile, PROFILE_UPDATED_EVENT, type PaymentInfo } from "@/lib/profile";
+import { readUserState, writeUserState } from "@/lib/appState";
 
 type PaymentStatus = "pending" | "paid" | "confirmed";
 
@@ -54,12 +55,14 @@ export default function PaymentsPage() {
   };
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) setRequests(JSON.parse(saved));
-      const studentsRaw = localStorage.getItem(STUDENTS_STORAGE_KEY);
-      if (studentsRaw) {
-        const parsed = JSON.parse(studentsRaw) as Array<{ name?: string; parent?: string }>;
+    let cancelled = false;
+    Promise.all([
+      readUserState<PaymentRequest[]>(STORAGE_KEY, initialRequests),
+      readUserState<Array<{ name?: string; parent?: string }>>(STUDENTS_STORAGE_KEY, []),
+    ])
+      .then(([saved, parsed]) => {
+        if (cancelled) return;
+        if (Array.isArray(saved)) setRequests(saved);
         if (Array.isArray(parsed)) {
           setStudentOptions(
             parsed
@@ -67,23 +70,28 @@ export default function PaymentsPage() {
               .map((s) => ({ name: String(s.name), parent: s.parent ? String(s.parent) : "Veli" }))
           );
         }
-      }
-    } catch (e) {
+      })
+      .catch((e) => {
       console.error("payment requests load", e);
-    }
-    setPaymentInfo(getPaymentInfo());
-    setHydrated(true);
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setPaymentInfo(getPaymentInfo());
+          setHydrated(true);
+        }
+      });
     const refresh = () => setPaymentInfo(getPaymentInfo());
     window.addEventListener(PROFILE_UPDATED_EVENT, refresh);
     window.addEventListener("storage", refresh);
     return () => {
       window.removeEventListener(PROFILE_UPDATED_EVENT, refresh);
       window.removeEventListener("storage", refresh);
+      cancelled = true;
     };
   }, []);
 
   useEffect(() => {
-    if (hydrated) localStorage.setItem(STORAGE_KEY, JSON.stringify(requests));
+    if (hydrated) void writeUserState(STORAGE_KEY, requests).catch((e) => console.error("payment requests save", e));
   }, [requests, hydrated]);
 
   const accountHolder = paymentInfo.accountHolder || fullName || "Hesap sahibi";

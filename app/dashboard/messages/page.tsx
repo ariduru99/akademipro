@@ -20,6 +20,7 @@ import {
   MicOff,
   VideoOff,
 } from "lucide-react";
+import { readUserState, writeUserState } from "@/lib/appState";
 
 type CallMode = "audio" | "video";
 
@@ -288,53 +289,48 @@ export default function MessagesPage() {
   const chatHistory = useMemo(() => (activeId >= 0 ? threads[activeId] ?? [] : []), [threads, activeId]);
 
   useEffect(() => {
-    try {
-      const tRaw = localStorage.getItem(STORAGE_KEY_THREADS);
-      const cRaw = localStorage.getItem(STORAGE_KEY_CONTACTS);
-      const nRaw = localStorage.getItem(STORAGE_KEY_NOTES);
-      if (tRaw) setThreads(mergeThreadsFromStorage(JSON.parse(tRaw)));
-      if (cRaw) {
-        const p = JSON.parse(cRaw);
-        if (Array.isArray(p) && p.length) setContacts(p);
-      }
-      if (nRaw) {
-        const p = JSON.parse(nRaw);
-        if (p && typeof p === "object") setNotesByContact(p as Record<number, string>);
-      }
-    } catch (e) {
+    let cancelled = false;
+    Promise.all([
+      readUserState<Record<number, ChatMessage[]>>(STORAGE_KEY_THREADS, emptyThreads),
+      readUserState<Contact[]>(STORAGE_KEY_CONTACTS, defaultContacts),
+      readUserState<Record<number, string>>(STORAGE_KEY_NOTES, {}),
+    ])
+      .then(([storedThreads, storedContacts, storedNotes]) => {
+        if (cancelled) return;
+        setThreads(mergeThreadsFromStorage(storedThreads));
+        if (Array.isArray(storedContacts) && storedContacts.length) setContacts(storedContacts);
+        if (storedNotes && typeof storedNotes === "object") setNotesByContact(storedNotes);
+      })
+      .catch((e) => {
       console.error("messages storage", e);
-    }
-    setHydrated(true);
+      })
+      .finally(() => {
+        if (!cancelled) setHydrated(true);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
     if (!hydrated) return;
-    try {
-      localStorage.setItem(STORAGE_KEY_THREADS, JSON.stringify(threads));
-      setStorageError(null);
-    } catch {
-      setStorageError("Tarayıcı depolama dolu. Büyük dosyalar kaydedilemedi; sayfayı yenilerseniz kaybolabilir.");
-    }
+    void writeUserState(STORAGE_KEY_THREADS, threads)
+      .then(() => setStorageError(null))
+      .catch(() => setStorageError("Mesajlar kaydedilemedi. Lütfen bağlantınızı kontrol edin."));
   }, [threads, hydrated]);
 
   useEffect(() => {
     if (!hydrated) return;
-    try {
-      localStorage.setItem(STORAGE_KEY_CONTACTS, JSON.stringify(contacts));
-      setStorageError(null);
-    } catch {
-      setStorageError("Tarayıcı depolama dolu. Değişiklikler kaydedilemedi; sayfayı yenilerseniz kaybolabilir.");
-    }
+    void writeUserState(STORAGE_KEY_CONTACTS, contacts)
+      .then(() => setStorageError(null))
+      .catch(() => setStorageError("Sohbet listesi kaydedilemedi. Lütfen bağlantınızı kontrol edin."));
   }, [contacts, hydrated]);
 
   useEffect(() => {
     if (!hydrated) return;
-    try {
-      localStorage.setItem(STORAGE_KEY_NOTES, JSON.stringify(notesByContact));
-      setStorageError(null);
-    } catch {
-      setStorageError("Tarayıcı depolama dolu. Notlar kaydedilemedi; sayfayı yenilerseniz kaybolabilir.");
-    }
+    void writeUserState(STORAGE_KEY_NOTES, notesByContact)
+      .then(() => setStorageError(null))
+      .catch(() => setStorageError("Notlar kaydedilemedi. Lütfen bağlantınızı kontrol edin."));
   }, [notesByContact, hydrated]);
 
   useEffect(() => {

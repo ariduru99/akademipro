@@ -56,24 +56,15 @@ export function durationHours(start: string, end: string): number {
   return Math.min(4, Math.max(0.5, diff));
 }
 
-export function upsertScheduleFromRoom(opts: {
+export function upsertScheduleInList(schedule: ScheduleEvent[], opts: {
   scheduleEventId?: number | null;
   roomName: string;
   isoDate: string;
   startTime: string;
   endTime: string;
   color: string;
-}): number {
-  const raw =
-    typeof window !== "undefined" ? localStorage.getItem("schedule_data") : null;
-  let schedule: ScheduleEvent[] = [];
-  try {
-    schedule = raw ? JSON.parse(raw) : [];
-    if (!Array.isArray(schedule)) schedule = [];
-  } catch {
-    schedule = [];
-  }
-
+}): { eventId: number; schedule: ScheduleEvent[] } {
+  const nextSchedule = Array.isArray(schedule) ? [...schedule] : [];
   const day = dateStrToScheduleDay(opts.isoDate);
   const hour = startTimeToScheduleHour(opts.startTime);
   const duration = durationHours(opts.startTime, opts.endTime);
@@ -91,28 +82,15 @@ export function upsertScheduleFromRoom(opts: {
     date: opts.isoDate,
   };
 
-  const idx = schedule.findIndex((s) => s.id === id);
-  if (idx >= 0) schedule[idx] = { ...schedule[idx], ...event };
-  else schedule.push(event);
+  const idx = nextSchedule.findIndex((s) => s.id === id);
+  if (idx >= 0) nextSchedule[idx] = { ...nextSchedule[idx], ...event };
+  else nextSchedule.push(event);
 
-  if (typeof window !== "undefined") {
-    localStorage.setItem("schedule_data", JSON.stringify(schedule));
-  }
-  return id;
+  return { eventId: id, schedule: nextSchedule };
 }
 
-export function removeScheduleEventById(eventId: number): void {
-  if (typeof window === "undefined") return;
-  const raw = localStorage.getItem("schedule_data");
-  let schedule: ScheduleEvent[] = [];
-  try {
-    schedule = raw ? JSON.parse(raw) : [];
-    if (!Array.isArray(schedule)) schedule = [];
-  } catch {
-    schedule = [];
-  }
-  schedule = schedule.filter((s) => s.id !== eventId);
-  localStorage.setItem("schedule_data", JSON.stringify(schedule));
+export function removeScheduleEventFromList(schedule: ScheduleEvent[], eventId: number): ScheduleEvent[] {
+  return (Array.isArray(schedule) ? schedule : []).filter((s) => s.id !== eventId);
 }
 
 export function isoDateOf(d: Date): string {

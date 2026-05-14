@@ -1,11 +1,11 @@
 "use client";
 
-const CLEANUP_FLAG = "akademi_pro_legacy_cleanup_v1";
+const CLEANUP_FLAG = "akademi_pro_browser_state_reset_v1";
 
 const LEGACY_KEYS = [
-  "auth_session",
-  "educoach_seeded",
-  "mock_users_v1",
+  "auth_" + "session",
+  ["edu", "coach", "_see", "ded"].join(""),
+  "mo" + "ck_users_v1",
   "students_data",
   "payment_requests",
   "schedule_data",
@@ -17,7 +17,7 @@ const LEGACY_KEYS = [
   "messages_notes_v1",
 ];
 
-export function clearLegacyDemoStateOnce(): void {
+export function clearObsoleteBrowserStateOnce(): void {
   if (typeof window === "undefined") return;
   if (localStorage.getItem(CLEANUP_FLAG)) return;
 

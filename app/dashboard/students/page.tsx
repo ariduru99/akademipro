@@ -20,6 +20,7 @@ import {
   ClipboardCheck,
   Target,
 } from "lucide-react";
+import { readUserState, writeUserState } from "@/lib/appState";
 
 type Student = {
   id: number;
@@ -114,20 +115,24 @@ export default function StudentsPage() {
   });
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const arr = JSON.parse(saved) as Student[];
-        if (Array.isArray(arr)) setStudents(arr);
-      }
-    } catch (e) {
+    let cancelled = false;
+    readUserState<Student[]>(STORAGE_KEY, defaultStudents)
+      .then((arr) => {
+        if (!cancelled && Array.isArray(arr)) setStudents(arr);
+      })
+      .catch((e) => {
       console.error("students load", e);
-    }
-    setHydrated(true);
+      })
+      .finally(() => {
+        if (!cancelled) setHydrated(true);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
-    if (hydrated) localStorage.setItem(STORAGE_KEY, JSON.stringify(students));
+    if (hydrated) void writeUserState(STORAGE_KEY, students).catch((e) => console.error("students save", e));
   }, [students, hydrated]);
 
   const showToast = (msg: string) => {
@@ -503,7 +508,7 @@ export default function StudentsPage() {
               <input
                 required
                 type="text"
-                placeholder="ogrenci@ornek.com veya STD-8891"
+                placeholder="ogrenci@alanadiniz.com veya profil kodu"
                 className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
               />
             </div>

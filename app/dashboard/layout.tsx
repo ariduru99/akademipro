@@ -30,7 +30,8 @@ import {
 } from "@/lib/notifications";
 import { useProfile } from "@/lib/profile";
 import { logoutClient, restoreLiveSession } from "@/lib/authAccounts";
-import { clearLegacyDemoStateOnce } from "@/lib/legacyCleanup";
+import { clearObsoleteBrowserStateOnce } from "@/lib/legacyCleanup";
+import { readUserState, writeUserState } from "@/lib/appState";
 
 
 const STATUS_KEY = "user_status";
@@ -85,7 +86,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (session) clearLegacyDemoStateOnce();
+    if (session) clearObsoleteBrowserStateOnce();
   }, [session]);
 
   useEffect(() => {
@@ -114,14 +115,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     const onChange = () => refreshNotifications();
     window.addEventListener(NOTIFICATIONS_UPDATED_EVENT, onChange);
     window.addEventListener("storage", onChange);
-    try {
-      const saved = localStorage.getItem(STATUS_KEY);
-      if (saved && STATUS_OPTIONS.includes(saved as StatusValue)) {
-        setStatus(saved as StatusValue);
-      }
-    } catch {
-      /* ignore */
-    }
+    void readUserState<StatusValue>(STATUS_KEY, "Online")
+      .then((saved) => {
+        if (saved && STATUS_OPTIONS.includes(saved)) setStatus(saved);
+      })
+      .catch(() => {});
     return () => {
       window.removeEventListener(NOTIFICATIONS_UPDATED_EVENT, onChange);
       window.removeEventListener("storage", onChange);
@@ -220,11 +218,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const updateStatus = (s: StatusValue) => {
     setStatus(s);
     setShowStatusMenu(false);
-    try {
-      localStorage.setItem(STATUS_KEY, s);
-    } catch {
-      /* ignore */
-    }
+    void writeUserState(STATUS_KEY, s).catch(() => {});
   };
 
   const isMessagesPage = pathname?.startsWith("/dashboard/messages") ?? false;

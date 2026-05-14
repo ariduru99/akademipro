@@ -72,7 +72,7 @@ export default function ForgotPasswordPage() {
                   onChange={(e) => setIdentifier(e.target.value)}
                   required
                   className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
-                  placeholder="ornek@email.com"
+                  placeholder="adiniz@alanadiniz.com"
                 />
                 <p className="text-xs text-slate-500 mt-1">
                   Sıfırlama bağlantısını e-posta adresinize göndereceğiz.

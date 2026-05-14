@@ -41,6 +41,7 @@ import {
 } from "@/lib/profile";
 import { isSupabaseClientConfigured } from "@/lib/authEnv";
 import { supabase } from "@/lib/supabase";
+import { readUserState } from "@/lib/appState";
 
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
 
@@ -126,8 +127,8 @@ export default function SettingsPage() {
     setTestingChannel(channels ? channels.join(",") : "all");
     const beforeIds = new Set(outbox.map((e) => e.id));
     const results = await sendNotification({
-      title: "Akademi Pro test bildirimi",
-      body: `Merhaba ${settings.fullName.split(" ")[0] || "orada"}! Bu bir test bildirimidir — kanallarınız çalışıyor.`,
+      title: "Akademi Pro kontrol bildirimi",
+      body: `Merhaba ${settings.fullName.split(" ")[0] || "orada"}! Bu kontrol bildirimi kanallarınızın çalıştığını doğrular.`,
       kind: "system",
       channels,
     });
@@ -250,10 +251,9 @@ export default function SettingsPage() {
     showToast("Profil fotoğrafı kaldırıldı.");
   };
 
-  const handleDownloadIncomeReport = () => {
+  const handleDownloadIncomeReport = async () => {
     try {
-      const raw = localStorage.getItem("payment_requests");
-      const list = raw ? (JSON.parse(raw) as Array<{ amount: number; date: string; status: string; desc?: string; student?: string }>) : [];
+      const list = await readUserState<Array<{ amount: number; date: string; status: string; desc?: string; student?: string }>>("payment_requests", []);
       const confirmed = list.filter((r) => r.status === "confirmed");
       const csv = [
         ["Tarih", "Öğrenci", "Açıklama", "Tutar (TRY)"],
@@ -493,7 +493,7 @@ export default function SettingsPage() {
                   <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                     <Bell className="w-5 h-5 text-primary-600" /> Bildirim Tercihleri
                   </h3>
-                  <p className="text-sm text-slate-500 mt-1">Hangi kanalları açacağınızı seçin, test bildirimi gönderin ve son aktiviteleri görün.</p>
+                  <p className="text-sm text-slate-500 mt-1">Hangi kanalları açacağınızı seçin, kontrol bildirimi gönderin ve son aktiviteleri görün.</p>
                 </div>
                 <div className="p-6 space-y-6">
                   {providers && !providers.email.configured && (
@@ -677,7 +677,7 @@ export default function SettingsPage() {
                     <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
                       <div>
                         <h4 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                          <Send className="w-4 h-4 text-primary-600" /> Test bildirimi
+                          <Send className="w-4 h-4 text-primary-600" /> Kontrol bildirimi
                         </h4>
                         <p className="text-xs text-slate-500">Aktif kanallarınıza anlık bir test gönderir.</p>
                       </div>

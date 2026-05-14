@@ -12,6 +12,7 @@ import {
   todayScheduleDay,
 } from '@/lib/scheduleSync';
 import { sendNotification } from '@/lib/notifications';
+import { readUserState, writeUserState } from '@/lib/appState';
 
 export default function SchedulePage() {
   const [view, setView] = useState<'haftalik' | 'arsiv'>('haftalik');
@@ -58,20 +59,26 @@ export default function SchedulePage() {
       month: 'short',
     });
 
-  // Load/Save from LocalStorage to persist
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('schedule_data');
-      if (saved) setSchedule(JSON.parse(saved));
-    } catch (e) {
+    let cancelled = false;
+    readUserState<ScheduleEvent[]>('schedule_data', initialSchedule)
+      .then((saved) => {
+        if (!cancelled && Array.isArray(saved)) setSchedule(saved);
+      })
+      .catch((e) => {
       console.error("Error loading schedule data", e);
-    }
-    setIsLoaded(true);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoaded(true);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
     if (isLoaded) {
-      localStorage.setItem('schedule_data', JSON.stringify(schedule));
+      void writeUserState('schedule_data', schedule).catch((e) => console.error("Error saving schedule data", e));
     }
   }, [schedule, isLoaded]);
 

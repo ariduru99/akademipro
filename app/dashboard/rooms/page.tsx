@@ -8,11 +8,12 @@ import {
   formatRoomTimeLabel,
   formatScheduleEventLabel,
   scheduleTitleForRoomCard,
-  upsertScheduleFromRoom,
-  removeScheduleEventById,
+  upsertScheduleInList,
+  removeScheduleEventFromList,
   todayISODate,
 } from '@/lib/scheduleSync';
 import { sendNotification } from '@/lib/notifications';
+import { readUserState, writeUserState } from '@/lib/appState';
 
 type Room = {
   id: string;
@@ -34,49 +35,39 @@ export default function RoomsPage() {
   const [scheduleEvents, setScheduleEvents] = useState<ScheduleEvent[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  const loadScheduleFromStorage = () => {
-    try {
-      const raw = localStorage.getItem('schedule_data');
-      if (!raw) {
-        setScheduleEvents([]);
-        return;
-      }
-      const parsed = JSON.parse(raw) as unknown;
-      setScheduleEvents(Array.isArray(parsed) ? parsed : []);
-    } catch {
-      setScheduleEvents([]);
-    }
-  };
-
   useEffect(() => {
-    try {
-      const savedRooms = localStorage.getItem('rooms_data');
-      if (savedRooms) setRooms(JSON.parse(savedRooms));
-    } catch (e) {
+    let cancelled = false;
+    Promise.all([
+      readUserState<Room[]>('rooms_data', defaultRooms),
+      readUserState<ScheduleEvent[]>('schedule_data', []),
+    ])
+      .then(([savedRooms, savedSchedule]) => {
+        if (cancelled) return;
+        if (Array.isArray(savedRooms)) setRooms(savedRooms);
+        if (Array.isArray(savedSchedule)) setScheduleEvents(savedSchedule);
+      })
+      .catch((e) => {
       console.error("Error loading rooms data", e);
-    }
-    loadScheduleFromStorage();
-    setIsLoaded(true);
-  }, []);
-
-  useEffect(() => {
-    const refresh = () => loadScheduleFromStorage();
-    const onVis = () => {
-      if (document.visibilityState === 'visible') refresh();
-    };
-    document.addEventListener('visibilitychange', onVis);
-    window.addEventListener('focus', refresh);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoaded(true);
+      });
     return () => {
-      document.removeEventListener('visibilitychange', onVis);
-      window.removeEventListener('focus', refresh);
+      cancelled = true;
     };
   }, []);
 
   useEffect(() => {
     if (isLoaded) {
-      localStorage.setItem('rooms_data', JSON.stringify(rooms));
+      void writeUserState('rooms_data', rooms).catch((e) => console.error("Error saving rooms data", e));
     }
   }, [rooms, isLoaded]);
+
+  useEffect(() => {
+    if (isLoaded) {
+      void writeUserState('schedule_data', scheduleEvents).catch((e) => console.error("Error saving schedule data", e));
+    }
+  }, [scheduleEvents, isLoaded]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editRoomId, setEditRoomId] = useState<string | null>(null);
@@ -120,7 +111,7 @@ export default function RoomsPage() {
     const displayTime = formatRoomTimeLabel(scheduleDate, startTime, endTime);
 
     const existing = editRoomId ? rooms.find((r) => r.id === editRoomId) : null;
-    const eventId = upsertScheduleFromRoom({
+    const { eventId, schedule: nextSchedule } = upsertScheduleInList(scheduleEvents, {
       scheduleEventId: existing?.scheduleEventId,
       roomName: name.trim(),
       isoDate: scheduleDate,
@@ -128,6 +119,7 @@ export default function RoomsPage() {
       endTime,
       color: existing?.color || 'primary',
     });
+    setScheduleEvents(nextSchedule);
 
     if (editRoomId) {
       setRooms(
@@ -146,7 +138,6 @@ export default function RoomsPage() {
         )
       );
       setEditRoomId(null);
-      loadScheduleFromStorage();
       showToast('Oda güncellendi; ders programına yansıtıldı.');
       void sendNotification({
         title: 'Oda güncellendi',
@@ -170,7 +161,6 @@ export default function RoomsPage() {
         },
         ...rooms,
       ]);
-      loadScheduleFromStorage();
       showToast('Oda oluşturuldu ve takvime eklendi.');
       void sendNotification({
         title: 'Yeni ders odası oluşturuldu',
@@ -206,11 +196,10 @@ export default function RoomsPage() {
 
   const handleDeleteRoom = (id: string) => {
     const r = rooms.find((x) => x.id === id);
-    if (r?.scheduleEventId) removeScheduleEventById(r.scheduleEventId);
+    if (r?.scheduleEventId) setScheduleEvents(removeScheduleEventFromList(scheduleEvents, r.scheduleEventId));
     setRooms(rooms.filter((x) => x.id !== id));
     setActiveMenuId(null);
     showToast('Oda silindi.');
-    loadScheduleFromStorage();
     if (r) {
       void sendNotification({
         title: 'Ders odası silindi',

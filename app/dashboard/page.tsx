@@ -23,6 +23,7 @@ import {
   todayScheduleDay,
   formatScheduleEventLabel,
 } from "@/lib/scheduleSync";
+import { readUserState, writeUserState } from "@/lib/appState";
 
 type Approval = { id: number; text: string; detail: string };
 type Announcement = { id: number; title: string; text: string; target: string };
@@ -51,44 +52,42 @@ export default function Dashboard() {
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    try {
-      const savedAnn = localStorage.getItem("dashboard_announcements");
-      const savedApp = localStorage.getItem("dashboard_approvals");
-      if (savedAnn) setAnnouncements(JSON.parse(savedAnn));
-      if (savedApp) setApprovals(JSON.parse(savedApp));
-
-      const sched = localStorage.getItem("schedule_data");
-      if (sched) {
-        const parsed = JSON.parse(sched) as unknown;
-        if (Array.isArray(parsed)) setSchedule(parsed as ScheduleEvent[]);
-      }
-
-      const studentsRaw = localStorage.getItem("students_data");
-      if (studentsRaw) {
-        const arr = JSON.parse(studentsRaw) as unknown;
-        if (Array.isArray(arr)) setStudentsCount(arr.length);
-      }
-
-      const payRaw = localStorage.getItem("payment_requests");
-      if (payRaw) {
-        const list = JSON.parse(payRaw) as Array<{ amount: number; status: string }>;
-        if (Array.isArray(list)) {
-          setConfirmedTotal(list.filter((r) => r.status === "confirmed").reduce((s, r) => s + r.amount, 0));
-          setPendingPaymentTotal(list.filter((r) => r.status === "pending").reduce((s, r) => s + r.amount, 0));
+    let cancelled = false;
+    Promise.all([
+      readUserState<Announcement[]>("dashboard_announcements", defaultAnnouncements),
+      readUserState<Approval[]>("dashboard_approvals", defaultApprovals),
+      readUserState<ScheduleEvent[]>("schedule_data", []),
+      readUserState<Array<unknown>>("students_data", []),
+      readUserState<Array<{ amount: number; status: string }>>("payment_requests", []),
+    ])
+      .then(([savedAnn, savedApp, sched, students, payments]) => {
+        if (cancelled) return;
+        if (Array.isArray(savedAnn)) setAnnouncements(savedAnn);
+        if (Array.isArray(savedApp)) setApprovals(savedApp);
+        if (Array.isArray(sched)) setSchedule(sched);
+        if (Array.isArray(students)) setStudentsCount(students.length);
+        if (Array.isArray(payments)) {
+          setConfirmedTotal(payments.filter((r) => r.status === "confirmed").reduce((s, r) => s + r.amount, 0));
+          setPendingPaymentTotal(payments.filter((r) => r.status === "pending").reduce((s, r) => s + r.amount, 0));
         }
-      }
-    } catch (e) {
+      })
+      .catch((e) => {
       console.error("dashboard data load", e);
-    }
-    setIsLoaded(true);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoaded(true);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
-    if (isLoaded) localStorage.setItem("dashboard_announcements", JSON.stringify(announcements));
+    if (isLoaded) void writeUserState("dashboard_announcements", announcements).catch((e) => console.error("announcements save", e));
   }, [announcements, isLoaded]);
 
   useEffect(() => {
-    if (isLoaded) localStorage.setItem("dashboard_approvals", JSON.stringify(approvals));
+    if (isLoaded) void writeUserState("dashboard_approvals", approvals).catch((e) => console.error("approvals save", e));
   }, [approvals, isLoaded]);
 
   const todayIso = useMemo(() => todayISODate(), []);

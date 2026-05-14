@@ -40,11 +40,8 @@ const HOMEWORKS: Array<{
 export default function Dashboard() {
   const { hydrated, role: userRole, firstName } = useProfile();
 
-  const defaultApprovals: Approval[] = [];
-  const defaultAnnouncements: Announcement[] = [];
-
-  const [approvals, setApprovals] = useState<Approval[]>(defaultApprovals);
-  const [announcements, setAnnouncements] = useState<Announcement[]>(defaultAnnouncements);
+  const [approvals, setApprovals] = useState<Approval[]>([]);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [schedule, setSchedule] = useState<ScheduleEvent[]>([]);
   const [studentsCount, setStudentsCount] = useState<number | null>(null);
   const [confirmedTotal, setConfirmedTotal] = useState<number>(0);
@@ -54,8 +51,8 @@ export default function Dashboard() {
   useEffect(() => {
     let cancelled = false;
     Promise.all([
-      readUserState<Announcement[]>("dashboard_announcements", defaultAnnouncements),
-      readUserState<Approval[]>("dashboard_approvals", defaultApprovals),
+      readUserState<Announcement[]>("dashboard_announcements", []),
+      readUserState<Approval[]>("dashboard_approvals", []),
       readUserState<ScheduleEvent[]>("schedule_data", []),
       readUserState<Array<unknown>>("students_data", []),
       readUserState<Array<{ amount: number; status: string }>>("payment_requests", []),

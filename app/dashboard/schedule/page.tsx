@@ -14,14 +14,14 @@ import {
 import { sendNotification } from '@/lib/notifications';
 import { readUserState, writeUserState } from '@/lib/appState';
 
+const initialSchedule: ScheduleEvent[] = [];
+
 export default function SchedulePage() {
   const [view, setView] = useState<'haftalik' | 'arsiv'>('haftalik');
 
   // Extend hours up to 23:00 for evening classes
   const hours = Array.from({ length: 15 }, (_, i) => `${i + 9}:00`);
   const days = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
-
-  const initialSchedule: ScheduleEvent[] = [];
 
   const [schedule, setSchedule] = useState<ScheduleEvent[]>(initialSchedule);
   const [isLoaded, setIsLoaded] = useState(false);

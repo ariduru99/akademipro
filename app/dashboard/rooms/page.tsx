@@ -28,9 +28,9 @@ type Room = {
   scheduleEventId?: number;
 };
 
-export default function RoomsPage() {
-  const defaultRooms: Room[] = [];
+const defaultRooms: Room[] = [];
 
+export default function RoomsPage() {
   const [rooms, setRooms] = useState(defaultRooms);
   const [scheduleEvents, setScheduleEvents] = useState<ScheduleEvent[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);

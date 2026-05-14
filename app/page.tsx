@@ -75,7 +75,7 @@ export default function Home() {
             <div className="flex items-center gap-1 mb-3">
               {[1,2,3,4,5].map(i => <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />)}
             </div>
-            <p className="text-slate-600 text-sm mb-4 italic leading-relaxed">&quot;Yıllardır WhatsApp gruplarından ders programı paylaşıyordum, velilerle ödeme konusunda sıkıntı yaşıyordum. EduCoach&apos;a geçeli 2 ay oldu, hayatım değişti. Her şey tek yerde.&quot;</p>
+            <p className="text-slate-600 text-sm mb-4 italic leading-relaxed">&quot;Yıllardır WhatsApp gruplarından ders programı paylaşıyordum, velilerle ödeme konusunda sıkıntı yaşıyordum. Akademi Pro&apos;ya geçeli 2 ay oldu, hayatım değişti. Her şey tek yerde.&quot;</p>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center font-bold">F</div>
               <div>

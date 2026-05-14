@@ -126,7 +126,7 @@ export default function SettingsPage() {
     setTestingChannel(channels ? channels.join(",") : "all");
     const beforeIds = new Set(outbox.map((e) => e.id));
     const results = await sendNotification({
-      title: "EduCoach test bildirimi",
+      title: "Akademi Pro test bildirimi",
       body: `Merhaba ${settings.fullName.split(" ")[0] || "orada"}! Bu bir test bildirimidir — kanallarınız çalışıyor.`,
       kind: "system",
       channels,
@@ -265,7 +265,7 @@ export default function SettingsPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `EduCoach-gelir-raporu-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.download = `akademi-pro-gelir-raporu-${new Date().toISOString().slice(0, 10)}.csv`;
       a.click();
       URL.revokeObjectURL(url);
       showToast("Gelir raporu indirildi.");
@@ -529,7 +529,7 @@ export default function SettingsPage() {
                                 </ol>
                                 <pre className="font-mono bg-amber-100/70 rounded p-2 mt-1 whitespace-pre-wrap">
                                   RESEND_API_KEY=re_xxxxxxxx{"\n"}
-                                  NOTIFY_EMAIL_FROM=&quot;EduCoach &lt;onboarding@resend.dev&gt;&quot;
+                                  NOTIFY_EMAIL_FROM=&quot;Akademi Pro &lt;onboarding@resend.dev&gt;&quot;
                                 </pre>
                               </div>
                               <p>
@@ -903,7 +903,7 @@ export default function SettingsPage() {
                   <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3 items-start">
                     <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                     <div className="text-sm text-amber-800">
-                      <strong>Bilgilendirme:</strong> Serbest meslek erbabı olarak elde ettiğiniz gelirleri vergi beyannamenizde beyan etmeniz gerekmektedir. EduCoach ödeme geçmişinizi raporlayarak vergi döneminizde kolaylık sağlar. <strong>Platform herhangi bir vergi kesintisi yapmaz</strong>, sorumluluk size aittir.
+                      <strong>Bilgilendirme:</strong> Serbest meslek erbabı olarak elde ettiğiniz gelirleri vergi beyannamenizde beyan etmeniz gerekmektedir. Akademi Pro ödeme geçmişinizi raporlayarak vergi döneminizde kolaylık sağlar. <strong>Platform herhangi bir vergi kesintisi yapmaz</strong>, sorumluluk size aittir.
                     </div>
                   </div>
 

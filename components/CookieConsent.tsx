@@ -42,7 +42,7 @@ export function CookieConsent() {
           <div className="flex-1">
             <p className="text-sm font-bold text-slate-800">Çerezler</p>
             <p className="text-xs text-slate-600 mt-1">
-              EduCoach yalnızca oturum yönetimi ve tercihlerinizi hatırlamak için zorunlu çerezler kullanır.
+              Akademi Pro yalnızca oturum yönetimi ve tercihlerinizi hatırlamak için zorunlu çerezler kullanır.
               Reklam veya üçüncü taraf takip çerezi kullanmıyoruz. Detaylar için{" "}
               <Link href="/gizlilik" className="text-primary-600 underline">
                 Gizlilik Politikası

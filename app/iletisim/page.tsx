@@ -57,7 +57,7 @@ export default function ContactPage() {
       <header className="bg-white border-b border-slate-200">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 text-lg font-bold text-primary-600">
-            <BookOpen className="w-5 h-5" /> EduCoach
+            <BookOpen className="w-5 h-5" /> Akademi Pro
           </Link>
           <Link href="/" className="text-sm text-slate-500 hover:text-primary-600 inline-flex items-center gap-1">
             <ArrowLeft className="w-4 h-4" /> Ana sayfaya dön
@@ -81,8 +81,8 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">E-posta</p>
-                  <a href="mailto:destek@educoach.app" className="text-slate-800 font-medium hover:text-primary-600">
-                    destek@educoach.app
+                  <a href="mailto:destek@akademipro.tr" className="text-slate-800 font-medium hover:text-primary-600">
+                    destek@akademipro.tr
                   </a>
                   <p className="text-xs text-slate-500 mt-1">Genel sorular için 1 iş günü içinde yanıtlanır.</p>
                 </div>

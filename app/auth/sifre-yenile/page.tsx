@@ -124,7 +124,7 @@ export default function ResetPasswordPage() {
             className="inline-flex items-center gap-2 text-2xl font-bold text-primary-600 mb-2 hover:scale-105 transition-transform"
           >
             <BookOpen className="w-8 h-8" />
-            EduCoach
+            Akademi Pro
           </Link>
           <p className="text-slate-500 text-sm">Yeni şifrenizi belirleyin</p>
         </div>

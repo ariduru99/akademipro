@@ -18,7 +18,7 @@ export function LegalLayout({
       <header className="bg-white border-b border-slate-200">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 text-lg font-bold text-primary-600">
-            <BookOpen className="w-5 h-5" /> EduCoach
+            <BookOpen className="w-5 h-5" /> Akademi Pro
           </Link>
           <Link
             href="/"

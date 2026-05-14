@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BookOpen, Loader2, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { isSupabaseClientConfigured } from "@/lib/authEnv";
-import { loginWithEmailAndPassword } from "@/lib/authAccounts";
+import { loginWithEmailAndPassword, requestEmailLoginLink } from "@/lib/authAccounts";
 
 export function LoginForm({ roleHint }: { roleHint: string | null }) {
   const router = useRouter();
@@ -14,6 +14,7 @@ export function LoginForm({ roleHint }: { roleHint: string | null }) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
   const [showPass, setShowPass] = useState(false);
 
   const liveAuth = isSupabaseClientConfigured();
@@ -22,11 +23,26 @@ export function LoginForm({ roleHint }: { roleHint: string | null }) {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setInfo("");
     try {
       await loginWithEmailAndPassword(identifier, password);
       router.push("/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Giriş başarısız.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEmailLink = async () => {
+    setLoading(true);
+    setError("");
+    setInfo("");
+    try {
+      const result = await requestEmailLoginLink(identifier);
+      setInfo(result.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Giriş bağlantısı gönderilemedi.");
     } finally {
       setLoading(false);
     }
@@ -64,6 +80,11 @@ export function LoginForm({ roleHint }: { roleHint: string | null }) {
             {error && (
               <div className="p-3 bg-red-50 text-red-700 border border-red-200 rounded-lg text-sm font-medium flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" /> {error}
+              </div>
+            )}
+            {info && (
+              <div className="p-3 bg-green-50 text-green-700 border border-green-200 rounded-lg text-sm font-medium">
+                {info}
               </div>
             )}
             <div>
@@ -113,6 +134,14 @@ export function LoginForm({ roleHint }: { roleHint: string | null }) {
               className="btn btn-primary w-full mt-2 disabled:opacity-70"
             >
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Giriş Yap"}
+            </button>
+            <button
+              type="button"
+              onClick={handleEmailLink}
+              disabled={loading || !identifier.trim()}
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 disabled:opacity-60 transition-colors"
+            >
+              E-posta ile güvenli giriş bağlantısı gönder
             </button>
           </form>
 

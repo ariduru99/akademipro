@@ -30,6 +30,7 @@ import {
 } from "@/lib/notifications";
 import { useProfile } from "@/lib/profile";
 import { logoutClient, restoreLiveSession } from "@/lib/authAccounts";
+import { clearLegacyDemoStateOnce } from "@/lib/legacyCleanup";
 
 
 const STATUS_KEY = "user_status";
@@ -82,6 +83,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     );
     setNotifications(list);
   }, []);
+
+  useEffect(() => {
+    if (session) clearLegacyDemoStateOnce();
+  }, [session]);
 
   useEffect(() => {
     if (!hydrated || session || sessionRestored) return;
@@ -335,7 +340,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               href="/dashboard"
               className="md:hidden flex items-center gap-2 text-lg font-bold text-primary-600"
             >
-              <BookOpen className="w-5 h-5" /> EduCoach
+              <BookOpen className="w-5 h-5" /> Akademi Pro
             </Link>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">

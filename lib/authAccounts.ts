@@ -1,5 +1,5 @@
 import type { SessionUser, UserRole } from "@/lib/profile";
-import { clearSession, emitProfileChange, SESSION_KEY } from "@/lib/profile";
+import { clearSession, emitProfileChange } from "@/lib/profile";
 import { isSupabaseClientConfigured } from "@/lib/authEnv";
 import { supabase } from "@/lib/supabase";
 
@@ -51,6 +51,40 @@ export async function requestPasswordReset(identifier: string): Promise<{ messag
   };
 }
 
+export async function requestEmailLoginLink(emailInput: string): Promise<{ message: string }> {
+  const email = emailInput.trim();
+  if (!email) throw new Error("E-posta adresi zorunlu.");
+  if (!email.includes("@")) throw new Error("Geçerli bir e-posta adresi girin.");
+  if (!isSupabaseClientConfigured() || !supabase) {
+    throw new Error("E-posta ile giriş için Supabase kimlik altyapısı yapılandırılmalı.");
+  }
+
+  const origin =
+    typeof window !== "undefined"
+      ? window.location.origin
+      : (process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");
+  if (!origin) {
+    throw new Error(
+      "Oturum adresi bulunamadı. Tarayıcıda açın veya NEXT_PUBLIC_SITE_URL tanımlayın."
+    );
+  }
+
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: {
+      emailRedirectTo: `${origin}/auth/callback`,
+      shouldCreateUser: false,
+    },
+  });
+
+  if (error) throw new Error(mapSupabaseLoginMessage(error.message));
+
+  return {
+    message:
+      "Giriş bağlantısı e-posta adresinize gönderildi. Gelen kutunuzu ve spam klasörünü kontrol edin.",
+  };
+}
+
 async function sessionFromSupabaseUser(uid: string, email: string): Promise<SessionUser> {
   if (!supabase) throw new Error("Supabase istemcisi oluşturulamadı.");
   const { data: profile, error: pErr } = await supabase
@@ -81,9 +115,8 @@ async function sessionFromSupabaseUser(uid: string, email: string): Promise<Sess
   };
 }
 
-function persistClientSession(session: SessionUser): void {
+function notifyProfileSessionChanged(): void {
   if (typeof window === "undefined") return;
-  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
   emitProfileChange();
 }
 
@@ -111,7 +144,7 @@ export async function loginWithEmailAndPassword(
   if (!uid) throw new Error("Oturum oluşturulamadı.");
 
   const session = await sessionFromSupabaseUser(uid, data.user.email ?? id);
-  persistClientSession(session);
+  notifyProfileSessionChanged();
   return session;
 }
 
@@ -131,7 +164,7 @@ export async function restoreLiveSession(): Promise<SessionUser | null> {
     session.user.id,
     session.user.email ?? ""
   );
-  persistClientSession(restored);
+  notifyProfileSessionChanged();
   return restored;
 }
 

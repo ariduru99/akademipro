@@ -4,8 +4,8 @@
     "createdAt": "2026-05-08T00:59:22.663Z",
     "channel": "sms",
     "to": "+905551234567",
-    "title": "EduCoach test bildirimi",
-    "body": "EduCoach test bildirimi\nMerhaba Tuğba! Bu bir test bildirimidir — kanallarınız çalışıyor.",
+    "title": "Akademi Pro test bildirimi",
+    "body": "Akademi Pro test bildirimi\nMerhaba Tuğba! Bu bir test bildirimidir — kanallarınız çalışıyor.",
     "status": "queued",
     "provider": "Outbox (simülasyon)"
   },
@@ -14,8 +14,8 @@
     "createdAt": "2026-05-08T01:00:00.675Z",
     "channel": "sms",
     "to": "05061516906",
-    "title": "EduCoach test bildirimi",
-    "body": "EduCoach test bildirimi\nMerhaba Tuğba! Bu bir test bildirimidir — kanallarınız çalışıyor.",
+    "title": "Akademi Pro test bildirimi",
+    "body": "Akademi Pro test bildirimi\nMerhaba Tuğba! Bu bir test bildirimidir — kanallarınız çalışıyor.",
     "status": "queued",
     "provider": "Outbox (simülasyon)"
   },
@@ -24,7 +24,7 @@
     "createdAt": "2026-05-08T01:00:59.547Z",
     "channel": "email",
     "to": "tugba@demo.com",
-    "title": "EduCoach test bildirimi",
+    "title": "Akademi Pro test bildirimi",
     "body": "Merhaba Tuğba! Bu bir test bildirimidir — kanallarınız çalışıyor.",
     "status": "queued",
     "provider": "Outbox (simülasyon)"
@@ -34,7 +34,7 @@
     "createdAt": "2026-05-08T01:01:21.278Z",
     "channel": "email",
     "to": "ramssar9@gmail.com",
-    "title": "EduCoach test bildirimi",
+    "title": "Akademi Pro test bildirimi",
     "body": "Merhaba Tuğba! Bu bir test bildirimidir — kanallarınız çalışıyor.",
     "status": "queued",
     "provider": "Outbox (simülasyon)"
@@ -44,7 +44,7 @@
     "createdAt": "2026-05-08T01:04:03.707Z",
     "channel": "email",
     "to": "ramssar9@gmail.com",
-    "title": "EduCoach test bildirimi",
+    "title": "Akademi Pro test bildirimi",
     "body": "Merhaba Tuğba! Bu bir test bildirimidir — kanallarınız çalışıyor.",
     "status": "queued",
     "provider": "Outbox (simülasyon)"
@@ -54,7 +54,7 @@
     "createdAt": "2026-05-08T01:06:11.647Z",
     "channel": "email",
     "to": "ramssar9@gmail.com",
-    "title": "EduCoach test bildirimi",
+    "title": "Akademi Pro test bildirimi",
     "body": "Merhaba Tuğba! Bu bir test bildirimidir — kanallarınız çalışıyor.",
     "status": "queued",
     "provider": "Outbox (simülasyon)"
@@ -64,7 +64,7 @@
     "createdAt": "2026-05-08T01:06:52.783Z",
     "channel": "email",
     "to": "ramssar9@gmail.com",
-    "title": "EduCoach test bildirimi",
+    "title": "Akademi Pro test bildirimi",
     "body": "Merhaba Tuğba! Bu bir test bildirimidir — kanallarınız çalışıyor.",
     "status": "queued",
     "provider": "Outbox (simülasyon)"
@@ -74,8 +74,8 @@
     "createdAt": "2026-05-08T01:06:52.926Z",
     "channel": "sms",
     "to": "05061516906",
-    "title": "EduCoach test bildirimi",
-    "body": "EduCoach test bildirimi\nMerhaba Tuğba! Bu bir test bildirimidir — kanallarınız çalışıyor.",
+    "title": "Akademi Pro test bildirimi",
+    "body": "Akademi Pro test bildirimi\nMerhaba Tuğba! Bu bir test bildirimidir — kanallarınız çalışıyor.",
     "status": "queued",
     "provider": "Outbox (simülasyon)"
   },
@@ -84,7 +84,7 @@
     "createdAt": "2026-05-08T21:01:39.328Z",
     "channel": "email",
     "to": "ramssar9@gmail.com",
-    "title": "EduCoach test bildirimi",
+    "title": "Akademi Pro test bildirimi",
     "body": "Merhaba Tuğba! Bu bir test bildirimidir — kanallarınız çalışıyor.",
     "status": "error",
     "provider": "Resend"
@@ -94,7 +94,7 @@
     "createdAt": "2026-05-08T21:03:28.074Z",
     "channel": "email",
     "to": "ramssar9@gmail.com",
-    "title": "EduCoach test bildirimi",
+    "title": "Akademi Pro test bildirimi",
     "body": "Merhaba Tuğba! Bu bir test bildirimidir — kanallarınız çalışıyor.",
     "status": "error",
     "provider": "Resend"

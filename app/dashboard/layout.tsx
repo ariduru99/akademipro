@@ -321,7 +321,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               href="/dashboard"
               className="md:hidden flex items-center gap-2 text-lg font-bold text-primary-600"
             >
-              <BookOpen className="w-5 h-5" /> EduCoach
+              <BookOpen className="w-5 h-5" /> Akademi Pro
             </Link>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">

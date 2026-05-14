@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { BookOpen, Users, Video, Star, Shield, CreditCard, MessageCircle, Calendar, Monitor } from 'lucide-react';
+import { BookOpen, Users, Video, Star, Shield, CreditCard, MessageCircle, Calendar, Monitor, Sparkles, TrendingUp, Quote, ArrowUpRight } from 'lucide-react';
 import { HomeComments } from '@/components/HomeComments';
 import { CookieConsent } from '@/components/CookieConsent';
 import { NewsletterSignup } from '@/components/NewsletterSignup';
@@ -68,51 +68,101 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Right Side - Testimonials */}
-        <div className="space-y-4">
-          {/* Testimonial 1 */}
-          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-1 mb-3">
-              {[1,2,3,4,5].map(i => <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />)}
+        {/* Right Side - Engaging, Premium Testimonials & Proof Section */}
+        <div className="space-y-6 relative">
+          {/* Floating Accents */}
+          <div className="absolute -top-6 right-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-extrabold px-4 py-1.5 rounded-full shadow-md flex items-center gap-1.5 animate-bounce z-20">
+            <Sparkles className="w-3.5 h-3.5" /> Eğitimcilerin Yeni Favorisi
+          </div>
+
+          {/* Premium Card 1 */}
+          <div className="bg-white/90 backdrop-blur-sm p-6 rounded-3xl border-2 border-primary-100 shadow-xl hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-primary-50 to-transparent rounded-bl-full -z-10 group-hover:scale-125 transition-transform"></div>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                ))}
+              </div>
+              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full flex items-center gap-1">
+                <TrendingUp className="w-3 h-3" /> +%120 Gelir Artışı
+              </span>
             </div>
-            <p className="text-slate-600 text-sm mb-4 italic leading-relaxed">&quot;Yıllardır WhatsApp gruplarından ders programı paylaşıyordum, velilerle ödeme konusunda sıkıntı yaşıyordum. Akademi Pro&apos;ya geçeli 2 ay oldu, hayatım değişti. Her şey tek yerde.&quot;</p>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center font-bold">F</div>
+            <p className="text-slate-700 text-sm mb-4 leading-relaxed font-medium">
+              &quot;Eskiden öğrenci taksitlerini, ek ders ücretlerini ve telafileri takip etmek tam bir kaostu. Akademi Pro ile tüm finansal süreçlerim ve programım tamamen otomatikleşti. Haftada en az 8 saatim bana kaldı, öğrenci sayımı iki katına çıkardım!&quot;
+            </p>
+            <div className="flex items-center gap-3 border-t border-slate-100 pt-3">
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 text-white flex items-center justify-center font-extrabold shadow-md">
+                AM
+              </div>
               <div>
-                <p className="font-bold text-slate-800 text-sm">Fatma K.</p>
-                <p className="text-xs text-slate-500">Özel Ders Öğretmeni • 8 yıllık deneyim</p>
+                <p className="font-extrabold text-slate-800 text-sm">Dr. Alperen M.</p>
+                <p className="text-xs text-primary-600 font-semibold">Matematik & Fizik Eğitmeni • 12 Yıllık Deneyim</p>
               </div>
             </div>
           </div>
 
-          {/* Testimonial 2 */}
-          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-1 mb-3">
-              {[1,2,3,4,5].map(i => <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />)}
+          {/* Premium Card 2 */}
+          <div className="bg-white/90 backdrop-blur-sm p-6 rounded-3xl border border-slate-200/80 shadow-lg hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-secondary-50 to-transparent rounded-bl-full -z-10 group-hover:scale-125 transition-transform"></div>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                ))}
+              </div>
+              <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full">
+                Kurumsal Çözüm
+              </span>
             </div>
-            <p className="text-slate-600 text-sm mb-4 italic leading-relaxed">&quot;Oğlumun öğretmeni bu sistemi kullanıyor. Ders saatlerini, ödevleri ve ödeme durumunu tek ekrandan görebiliyorum. Veliler için gerçekten pratik.&quot;</p>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-secondary-100 text-secondary-600 flex items-center justify-center font-bold">E</div>
+            <p className="text-slate-700 text-sm mb-4 leading-relaxed font-medium">
+              &quot;Kurumumuzdaki 15 eğitmenin canlı derslerini, ödev takiplerini ve veli bilgilendirmelerini tek tıkla izleyebiliyoruz. Velilerden gelen &apos;Sisteminiz harika, her şey çok şeffaf&apos; dönütleri kurumsal itibarımızı zirveye taşıdı.&quot;
+            </p>
+            <div className="flex items-center gap-3 border-t border-slate-100 pt-3">
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-secondary-500 to-secondary-700 text-white flex items-center justify-center font-extrabold shadow-md">
+                SY
+              </div>
               <div>
-                <p className="font-bold text-slate-800 text-sm">Emre B.</p>
-                <p className="text-xs text-slate-500">Veli • Bursa</p>
+                <p className="font-extrabold text-slate-800 text-sm">Sevim Y.</p>
+                <p className="text-xs text-secondary-600 font-semibold">Yabancı Dil Kursu Kurucusu</p>
               </div>
             </div>
           </div>
 
-          {/* Testimonial 3 */}
-          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-1 mb-3">
-              {[1,2,3,4,5].map(i => <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />)}
+          {/* Premium Card 3 */}
+          <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-6 rounded-3xl shadow-xl hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 relative overflow-hidden">
+            <div className="absolute -right-4 -bottom-4 opacity-10">
+              <Quote className="w-32 h-32 text-white" />
             </div>
-            <p className="text-slate-600 text-sm mb-4 italic leading-relaxed">&quot;Piyano dersi veriyorum, hem yüz yüze hem online. Eskiden Zoom ve Excel ayrı ayrıydı, şimdi tek platformda ders odası açıp ödememi de takip ediyorum.&quot;</p>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold">D</div>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                ))}
+              </div>
+              <span className="text-xs font-bold text-amber-400 bg-white/10 px-2.5 py-1 rounded-full flex items-center gap-1 backdrop-blur-md">
+                %100 Veli Memnuniyeti
+              </span>
+            </div>
+            <p className="text-slate-200 text-sm mb-4 leading-relaxed font-medium relative z-10">
+              &quot;Özel yetenek sınavlarına hazırladığım öğrencilerim çizimlerini anında yüklüyor, ben de sistem üzerinden detaylı kritik verebiliyorum. Hem ders odası hem ödev arşivi tek yerde. İnsanı içine çeken, muazzam akıcı bir platform!&quot;
+            </p>
+            <div className="flex items-center gap-3 border-t border-white/10 pt-3 relative z-10">
+              <div className="w-11 h-11 rounded-2xl bg-white/10 backdrop-blur-md text-amber-400 flex items-center justify-center font-extrabold border border-white/20">
+                KD
+              </div>
               <div>
-                <p className="font-bold text-slate-800 text-sm">Deniz A.</p>
-                <p className="text-xs text-slate-500">Müzik Eğitmeni • İzmir</p>
+                <p className="font-extrabold text-white text-sm">Kaan D.</p>
+                <p className="text-xs text-slate-400">Güzel Sanatlar & Tasarım Atölyesi</p>
               </div>
             </div>
+          </div>
+
+          {/* Quick interactive prompt linking to full comments */}
+          <div className="text-center pt-2">
+            <Link href="#yorumlar" className="inline-flex items-center gap-1.5 text-xs font-bold text-primary-600 hover:text-primary-700 underline underline-offset-4 transition-colors">
+              Tüm canlı ziyaretçi yorumlarını ve değerlendirmeleri inceleyin <ArrowUpRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
         </div>
       </section>

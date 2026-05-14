@@ -7,7 +7,7 @@ import { emitProfileChange } from "./profile";
 export function seedDemoData() {
   if (typeof window === "undefined") return;
 
-  const SEED_FLAG = "educoach_seeded";
+  const SEED_FLAG = "akademipro_seeded";
   if (localStorage.getItem(SEED_FLAG)) return;
 
   // 1. Students Data

@@ -2,19 +2,19 @@ import type { Metadata } from "next";
 import { LegalLayout } from "@/components/LegalLayout";
 
 export const metadata: Metadata = {
-  title: "Kullanım Koşulları | EduCoach",
-  description: "EduCoach platformunun kullanım koşulları ve hizmet şartları.",
+  title: "Kullanım Koşulları | Akademi Pro",
+  description: "Akademi Pro platformunun kullanım koşulları ve hizmet şartları.",
 };
 
 export default function TermsPage() {
   return (
     <LegalLayout
       title="Kullanım Koşulları"
-      subtitle="EduCoach platformunu kullanmadan önce lütfen aşağıdaki şartları dikkatlice okuyun."
+      subtitle="Akademi Pro platformunu kullanmadan önce lütfen aşağıdaki şartları dikkatlice okuyun."
       updatedAt="8 Mayıs 2026"
     >
       <p>
-        EduCoach (&quot;Platform&quot;) hizmetlerini kullanarak aşağıdaki koşulları kabul etmiş sayılırsınız. Bu
+        Akademi Pro (&quot;Platform&quot;) hizmetlerini kullanarak aşağıdaki koşulları kabul etmiş sayılırsınız. Bu
         koşullar, eğitmen, öğrenci ve velinin Platform üzerindeki hak ve yükümlülüklerini düzenler.
       </p>
 

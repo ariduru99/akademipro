@@ -10,7 +10,7 @@ export default function NotFound() {
           className="inline-flex items-center gap-2 text-2xl font-bold text-primary-600"
         >
           <BookOpen className="w-7 h-7" />
-          EduCoach
+          Akademi Pro
         </Link>
         <p className="text-7xl font-black text-primary-600/80 tracking-tight">404</p>
         <h1 className="text-2xl font-bold text-slate-800">Aradığınız sayfa bulunamadı</h1>

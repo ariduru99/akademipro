@@ -1,0 +1,17 @@
+{
+  "name": "Akademi Pro — Eğitim Sürecinizi Yönetin",
+  "short_name": "AkademiPro",
+  "description": "Eğitmenler, öğrenciler ve veliler için ders programı, ödeme takibi, mesajlaşma ve canlı sınıf yönetimi.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4f46e5",
+  "lang": "tr",
+  "dir": "ltr",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icon-180.svg", "sizes": "180x180", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

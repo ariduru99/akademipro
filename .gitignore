@@ -1,0 +1,10 @@
+# Next.js
+.next/
+out/
+
+node_modules/
+
+# caches (webpack / turbopack bozulmasına yol açabilir)
+node_modules/.cache/
+
+.env*.local

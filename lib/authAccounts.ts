@@ -1,19 +1,7 @@
-import { mockLogin, mockRegister, mockResetPassword, type MockUser } from "@/lib/mockDb";
 import type { SessionUser, UserRole } from "@/lib/profile";
-import { clearSession } from "@/lib/profile";
+import { clearSession, emitProfileChange, SESSION_KEY } from "@/lib/profile";
 import { isSupabaseClientConfigured } from "@/lib/authEnv";
 import { supabase } from "@/lib/supabase";
-
-export function sessionFromMockUser(user: MockUser): SessionUser {
-  return {
-    id: user.id,
-    role: user.role,
-    full_name: user.full_name,
-    email: user.email,
-    profile_code: user.profile_code,
-    city: user.city,
-  };
-}
 
 function mapSupabaseLoginMessage(msg: string): string {
   const m = msg.toLowerCase();
@@ -31,37 +19,72 @@ function mapPasswordResetMessage(msg: string): string {
 }
 
 /**
- * Mock: profil kodu veya e-posta. Supabase: yalnızca e-posta; redirect için tarayıcı origin kullanılır.
+ * Supabase: yalnızca e-posta; redirect için tarayıcı origin kullanılır.
  * Supabase panelinde Authentication → URL Configuration içine `.../auth/sifre-yenile` ekleyin.
  */
 export async function requestPasswordReset(identifier: string): Promise<{ message: string }> {
   const id = identifier.trim();
   if (!id) throw new Error("Bu alan zorunlu.");
 
-  if (isSupabaseClientConfigured()) {
-    if (!supabase) throw new Error("Supabase istemcisi oluşturulamadı.");
-    if (!id.includes("@")) {
-      throw new Error("Canlı ortamda sıfırlama için e-posta adresinizi girin (profil kodu kullanılmaz).");
-    }
-    const origin =
-      typeof window !== "undefined"
-        ? window.location.origin
-        : (process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");
-    if (!origin) {
-      throw new Error(
-        "Oturum adresi bulunamadı. Tarayıcıda açın veya NEXT_PUBLIC_SITE_URL tanımlayın."
-      );
-    }
-    const redirectTo = `${origin}/auth/sifre-yenile`;
-    const { error } = await supabase.auth.resetPasswordForEmail(id, { redirectTo });
-    if (error) throw new Error(mapPasswordResetMessage(error.message));
-    return {
-      message:
-        "E-postanıza sıfırlama bağlantısı gönderildi. Gelen kutunuzu ve spam klasörünü kontrol edin; bağlantının süresi dolabilir.",
-    };
+  if (!isSupabaseClientConfigured() || !supabase) {
+    throw new Error("Şifre sıfırlama için Supabase kimlik altyapısı yapılandırılmalı.");
+  }
+  if (!id.includes("@")) {
+    throw new Error("Sıfırlama için e-posta adresinizi girin.");
   }
 
-  return mockResetPassword(id);
+  const origin =
+    typeof window !== "undefined"
+      ? window.location.origin
+      : (process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");
+  if (!origin) {
+    throw new Error(
+      "Oturum adresi bulunamadı. Tarayıcıda açın veya NEXT_PUBLIC_SITE_URL tanımlayın."
+    );
+  }
+  const redirectTo = `${origin}/auth/sifre-yenile`;
+  const { error } = await supabase.auth.resetPasswordForEmail(id, { redirectTo });
+  if (error) throw new Error(mapPasswordResetMessage(error.message));
+  return {
+    message:
+      "E-postanıza sıfırlama bağlantısı gönderildi. Gelen kutunuzu ve spam klasörünü kontrol edin; bağlantının süresi dolabilir.",
+  };
+}
+
+async function sessionFromSupabaseUser(uid: string, email: string): Promise<SessionUser> {
+  if (!supabase) throw new Error("Supabase istemcisi oluşturulamadı.");
+  const { data: profile, error: pErr } = await supabase
+    .from("profiles")
+    .select("id, role, full_name, profile_code, city")
+    .eq("id", uid)
+    .single();
+
+  if (pErr || !profile) {
+    const detail = pErr?.message ? ` (${pErr.message})` : "";
+    throw new Error(
+      `Profil kaydı bulunamadı${detail}. SQL migration (handle_new_user tetikleyicisi) uygulandı mı kontrol edin veya hesabı yeniden oluşturun.`
+    );
+  }
+
+  const role = profile.role as UserRole;
+  if (role !== "teacher" && role !== "student" && role !== "parent") {
+    throw new Error("Bu hesap rolü panele giriş için desteklenmiyor.");
+  }
+
+  return {
+    id: profile.id,
+    role,
+    full_name: profile.full_name,
+    email,
+    profile_code: profile.profile_code,
+    city: profile.city ?? undefined,
+  };
+}
+
+function persistClientSession(session: SessionUser): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  emitProfileChange();
 }
 
 export async function loginWithEmailAndPassword(
@@ -71,54 +94,45 @@ export async function loginWithEmailAndPassword(
   const id = identifier.trim();
   if (!id || !password) throw new Error("E-posta ve şifre zorunlu.");
 
-  if (isSupabaseClientConfigured()) {
-    if (!supabase) {
-      throw new Error("Supabase istemcisi oluşturulamadı. Ortam değişkenlerini kontrol edin.");
-    }
-    if (!id.includes("@")) {
-      throw new Error(
-        "Canlı ortamda giriş için e-posta adresinizi kullanın (profil kodu yerine)."
-      );
-    }
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: id,
-      password,
-    });
-    if (error) throw new Error(mapSupabaseLoginMessage(error.message));
-
-    const uid = data.user?.id;
-    if (!uid) throw new Error("Oturum oluşturulamadı.");
-
-    const { data: profile, error: pErr } = await supabase
-      .from("profiles")
-      .select("id, role, full_name, profile_code, city")
-      .eq("id", uid)
-      .single();
-
-    if (pErr || !profile) {
-      const detail = pErr?.message ? ` (${pErr.message})` : "";
-      throw new Error(
-        `Profil kaydı bulunamadı${detail}. SQL migration (handle_new_user tetikleyicisi) uygulandı mı kontrol edin veya hesabı yeniden oluşturun.`
-      );
-    }
-
-    const role = profile.role as UserRole;
-    if (role !== "teacher" && role !== "student" && role !== "parent") {
-      throw new Error("Bu hesap rolü panele giriş için desteklenmiyor.");
-    }
-
-    return {
-      id: profile.id,
-      role,
-      full_name: profile.full_name,
-      email: data.user.email ?? id,
-      profile_code: profile.profile_code,
-      city: profile.city ?? undefined,
-    };
+  if (!isSupabaseClientConfigured() || !supabase) {
+    throw new Error("Giriş için Supabase kimlik altyapısı yapılandırılmalı.");
+  }
+  if (!id.includes("@")) {
+    throw new Error("Giriş için e-posta adresinizi kullanın.");
   }
 
-  const user = await mockLogin(id, password);
-  return sessionFromMockUser(user);
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: id,
+    password,
+  });
+  if (error) throw new Error(mapSupabaseLoginMessage(error.message));
+
+  const uid = data.user?.id;
+  if (!uid) throw new Error("Oturum oluşturulamadı.");
+
+  const session = await sessionFromSupabaseUser(uid, data.user.email ?? id);
+  persistClientSession(session);
+  return session;
+}
+
+export async function restoreLiveSession(): Promise<SessionUser | null> {
+  if (!isSupabaseClientConfigured() || !supabase || typeof window === "undefined") {
+    return null;
+  }
+
+  const {
+    data: { session },
+    error,
+  } = await supabase.auth.getSession();
+
+  if (error || !session?.user?.id) return null;
+
+  const restored = await sessionFromSupabaseUser(
+    session.user.id,
+    session.user.email ?? ""
+  );
+  persistClientSession(restored);
+  return restored;
 }
 
 export async function registerTeacherLive(input: {

@@ -39,18 +39,21 @@ import {
   setAvatar,
   useProfile,
 } from "@/lib/profile";
+import { isSupabaseClientConfigured } from "@/lib/authEnv";
+import { supabase } from "@/lib/supabase";
 
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
 
 export default function SettingsPage() {
   const [toast, setToast] = useState("");
   const [activeSection, setActiveSection] = useState("profile");
-  const { avatar, initials, settings: profileSettings, hydrated: profileHydrated } = useProfile();
+  const { avatar, initials, session, settings: profileSettings, hydrated: profileHydrated } = useProfile();
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [isSynced, setIsSynced] = useState(false);
 
   const [pwError, setPwError] = useState<string | null>(null);
   const [pwOk, setPwOk] = useState<string | null>(null);
+  const [pwLoading, setPwLoading] = useState(false);
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [avatarError, setAvatarError] = useState<string | null>(null);
@@ -69,9 +72,16 @@ export default function SettingsPage() {
         setSettings(latest);
       } else if (profileSettings.fullName) {
         setSettings(profileSettings);
+      } else if (session) {
+        setSettings({
+          ...latest,
+          fullName: session.full_name || latest.fullName,
+          email: session.email || latest.email,
+          city: session.city || latest.city,
+        });
       }
     }
-  }, [profileHydrated, profileSettings, settings.fullName]);
+  }, [profileHydrated, profileSettings, session, settings.fullName]);
 
 
 
@@ -132,7 +142,7 @@ export default function SettingsPage() {
           r.status === "sent"
             ? "gönderildi"
             : r.status === "queued"
-              ? "kuyruğa alındı (demo)"
+              ? "kuyruğa alındı"
               : r.status === "skipped"
                 ? "atlandı"
                 : "hata";
@@ -158,9 +168,18 @@ export default function SettingsPage() {
     showToast("Değişiklikler başarıyla kaydedildi!");
   };
 
-  const handleChangePassword = () => {
+  const handleChangePassword = async () => {
     setPwError(null);
     setPwOk(null);
+    if (!isSupabaseClientConfigured() || !supabase) {
+      setPwError("Şifre güncellemek için Supabase kimlik altyapısı yapılandırılmalı.");
+      return;
+    }
+    const emailForPasswordChange = settings.email || session?.email || "";
+    if (!emailForPasswordChange) {
+      setPwError("Şifre güncellemek için profil e-postanızı kaydedin.");
+      return;
+    }
     if (!settings.currentPassword) {
       setPwError("Mevcut şifrenizi girin.");
       return;
@@ -173,11 +192,31 @@ export default function SettingsPage() {
       setPwError("Yeni şifre, mevcut şifreden farklı olmalı.");
       return;
     }
-    setSettings({ ...settings, currentPassword: "", newPassword: "" });
-    setPwOk(
-      "Şifre değişikliği şu an yerel olarak doğrulanır; gerçek doğrulama Supabase entegrasyonu sonrası aktif olacak."
-    );
-    setTimeout(() => setPwOk(null), 6000);
+    setPwLoading(true);
+    try {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: emailForPasswordChange,
+        password: settings.currentPassword,
+      });
+      if (signInError) {
+        throw new Error("Mevcut şifreniz doğrulanamadı.");
+      }
+
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: settings.newPassword,
+      });
+      if (updateError) {
+        throw new Error(updateError.message || "Şifre güncellenemedi.");
+      }
+
+      setSettings({ ...settings, currentPassword: "", newPassword: "" });
+      setPwOk("Şifreniz başarıyla güncellendi.");
+      setTimeout(() => setPwOk(null), 6000);
+    } catch (err) {
+      setPwError(err instanceof Error ? err.message : "Şifre güncellenemedi.");
+    } finally {
+      setPwLoading(false);
+    }
   };
 
   const handlePickAvatar = () => fileInputRef.current?.click();
@@ -437,9 +476,10 @@ export default function SettingsPage() {
                     <button
                       type="button"
                       onClick={handleChangePassword}
-                      className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-bold hover:bg-primary-700 transition-colors"
+                      disabled={pwLoading}
+                      className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-bold hover:bg-primary-700 transition-colors disabled:opacity-60"
                     >
-                      Şifreyi Güncelle
+                      {pwLoading ? "Güncelleniyor..." : "Şifreyi Güncelle"}
                     </button>
                   </div>
                 </div>
@@ -461,7 +501,7 @@ export default function SettingsPage() {
                       <div className="flex items-start gap-3">
                         <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                         <div className="flex-1 text-sm">
-                          <p className="font-bold text-amber-900">Demo modu — gerçek e-posta gönderilmiyor</p>
+                          <p className="font-bold text-amber-900">E-posta sağlayıcısı yapılandırılmamış</p>
                           <p className="text-amber-800 mt-1">
                             Test edilen e-postalar yalnızca aşağıdaki <strong>outbox</strong> tablosuna kaydediliyor.
                           </p>
@@ -694,7 +734,7 @@ export default function SettingsPage() {
                               r.status === "sent"
                                 ? "Gönderildi"
                                 : r.status === "queued"
-                                  ? "Demo · Outbox'a yazıldı"
+                                  ? "Outbox'a yazıldı"
                                   : r.status === "skipped"
                                     ? "Atlandı"
                                     : "Hata";

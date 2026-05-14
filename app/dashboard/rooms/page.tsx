@@ -28,12 +28,7 @@ type Room = {
 };
 
 export default function RoomsPage() {
-  const defaultRooms: Room[] = [
-    { id: 'RM-984A', name: 'LGS Matematik Grubu', students: 5, time: 'Salı, 14:00 - 15:30', status: 'active', color: 'primary' },
-    { id: 'RM-412X', name: 'İngilizce A2 Seviye', students: 1, time: 'Çarşamba, 16:00 - 17:00', status: 'upcoming', color: 'yellow' },
-    { id: 'RM-105B', name: 'YKS Fizik Hızlandırma', students: 12, time: 'Cuma, 18:00 - 20:00', status: 'upcoming', color: 'purple' },
-    { id: 'RM-772C', name: 'İlkokul Okuma Yazma', students: 3, time: 'Pazartesi, 10:00 - 11:30', status: 'completed', color: 'green' },
-  ];
+  const defaultRooms: Room[] = [];
 
   const [rooms, setRooms] = useState(defaultRooms);
   const [scheduleEvents, setScheduleEvents] = useState<ScheduleEvent[]>([]);

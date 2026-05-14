@@ -27,42 +27,20 @@ import {
 type Approval = { id: number; text: string; detail: string };
 type Announcement = { id: number; title: string; text: string; target: string };
 
-const HOMEWORKS = [
-  {
-    id: 1,
-    subject: "Matematik",
-    desc: "Üslü Sayılar Test 1 ve 2 Çözülecek",
-    deadline: "Yarın 23:59",
-    student: "Ali Yılmaz",
-    files: [
-      { name: "uslu_sayilar_test1.pdf", size: "1.2 MB", date: "5 Mayıs 2026" },
-      { name: "cozumlerim_foto.jpg", size: "3.4 MB", date: "5 Mayıs 2026" },
-    ],
-  },
-  {
-    id: 2,
-    subject: "Fizik",
-    desc: "Kuvvet ve Hareket Özeti Çıkarılacak",
-    deadline: "Cuma 18:00",
-    student: "Zeynep Kaya",
-    files: [{ name: "kuvvet_hareket_ozet.docx", size: "840 KB", date: "4 Mayıs 2026" }],
-  },
-];
+const HOMEWORKS: Array<{
+  id: number;
+  subject: string;
+  desc: string;
+  deadline: string;
+  student: string;
+  files: Array<{ name: string; size: string; date: string }>;
+}> = [];
 
 export default function Dashboard() {
   const { hydrated, role: userRole, firstName } = useProfile();
 
-  const defaultApprovals: Approval[] = [
-    { id: 1, text: "Ödeme Onayı (Ali Y.)", detail: "Dün 14:00 Dersi - ₺600" },
-  ];
-  const defaultAnnouncements: Announcement[] = [
-    {
-      id: 1,
-      title: "Deneme Sınavı Haftası",
-      text: "Tüm Matematik öğrencilerine Cuma günü genel LGS denemesi atanacak. Veli bilgilendirmesini unutma.",
-      target: "Tüm Öğrenciler",
-    },
-  ];
+  const defaultApprovals: Approval[] = [];
+  const defaultAnnouncements: Announcement[] = [];
 
   const [approvals, setApprovals] = useState<Approval[]>(defaultApprovals);
   const [announcements, setAnnouncements] = useState<Announcement[]>(defaultAnnouncements);
@@ -537,7 +515,7 @@ export default function Dashboard() {
                               </p>
                             </div>
                           </div>
-                          <span className="text-[10px] text-slate-400 shrink-0 ml-2">Demo dosya</span>
+                          <span className="text-[10px] text-slate-400 shrink-0 ml-2">Yüklenen dosya</span>
                         </div>
                       ))}
                     </div>
@@ -589,9 +567,8 @@ export default function Dashboard() {
                 >
                   <option value="Tüm Öğrenciler">Tüm Öğrenciler</option>
                   <option value="Tüm Veliler">Tüm Veliler</option>
-                  <option value="Sadece: LGS Matematik Grubu">Sadece: LGS Matematik Grubu</option>
-                  <option value="Özel: Ali Yılmaz">Özel Ders: Ali Yılmaz</option>
-                  <option value="Özel: Zeynep Kaya">Özel Ders: Zeynep Kaya</option>
+                  <option value="Belirli Grup">Belirli Grup</option>
+                  <option value="Tek Öğrenci">Tek Öğrenci</option>
                 </select>
               </div>
               <div>

@@ -12,7 +12,6 @@ import {
   Loader2,
   AlertCircle,
 } from "lucide-react";
-import { mockRegister } from "@/lib/mockDb";
 import { isSupabaseClientConfigured } from "@/lib/authEnv";
 import { registerStudentParentLive, registerTeacherLive } from "@/lib/authAccounts";
 
@@ -89,16 +88,10 @@ export function RegisterForm({ initialRoleQuery }: { initialRoleQuery: string | 
     try {
       const fullName = `${tName.trim()} ${tSurname.trim()}`.trim();
       const email = tEmail.trim();
-      if (isSupabaseClientConfigured()) {
-        await registerTeacherLive({ fullName, email, password: tPass });
-      } else {
-        await mockRegister({
-          type: "teacher",
-          fullName,
-          email,
-          password: tPass,
-        });
+      if (!isSupabaseClientConfigured()) {
+        throw new Error("Kayıt için Supabase kimlik altyapısı yapılandırılmalı.");
       }
+      await registerTeacherLive({ fullName, email, password: tPass });
       setStep(3);
       setTimeout(goToLogin, 1800);
     } catch (err) {
@@ -119,34 +112,21 @@ export function RegisterForm({ initialRoleQuery }: { initialRoleQuery: string | 
     try {
       const studentFull = `${sName.trim()} ${sSurname.trim()}`.trim();
       const parentFull = `${pName.trim()} ${pSurname.trim()}`.trim();
-      if (isSupabaseClientConfigured()) {
-        await registerStudentParentLive({
-          student: {
-            fullName: studentFull,
-            email: sEmail.trim(),
-            password: sPass,
-          },
-          parent: {
-            fullName: parentFull,
-            email: pEmail.trim(),
-            password: pPass,
-          },
-        });
-      } else {
-        await mockRegister({
-          type: "student_parent",
-          student: {
-            fullName: studentFull,
-            email: sEmail.trim(),
-            password: sPass,
-          },
-          parent: {
-            fullName: parentFull,
-            email: pEmail.trim(),
-            password: pPass,
-          },
-        });
+      if (!isSupabaseClientConfigured()) {
+        throw new Error("Kayıt için Supabase kimlik altyapısı yapılandırılmalı.");
       }
+      await registerStudentParentLive({
+        student: {
+          fullName: studentFull,
+          email: sEmail.trim(),
+          password: sPass,
+        },
+        parent: {
+          fullName: parentFull,
+          email: pEmail.trim(),
+          password: pPass,
+        },
+      });
       setStep(3);
       setTimeout(goToLogin, 1800);
     } catch (err) {
@@ -168,6 +148,20 @@ export function RegisterForm({ initialRoleQuery }: { initialRoleQuery: string | 
         </div>
 
         <div className="p-6 sm:p-8">
+          {!isSupabaseClientConfigured() && (
+            <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 flex items-start gap-2">
+              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold">Canlı kayıt altyapısı yapılandırılmamış</p>
+                <p className="mt-1">
+                  Hesap oluşturmak için Supabase ortam değişkenlerini tanımlayın:
+                  NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY ve
+                  SUPABASE_SERVICE_ROLE_KEY.
+                </p>
+              </div>
+            </div>
+          )}
+
           {step === 1 && (
             <div className="space-y-6">
               <h3 className="text-xl font-bold text-slate-800 text-center mb-6">Nasıl katılmak istiyorsunuz?</h3>

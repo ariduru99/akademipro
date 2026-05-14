@@ -188,7 +188,7 @@ export default function Home() {
                 Ücretsiz Kayıt Ol
               </Link>
               <Link href="/login" className="border-2 border-white/30 text-white px-8 py-3 rounded-xl font-bold hover:bg-white/10 transition-colors">
-                Demo ile Dene
+                Hesabına Giriş Yap
               </Link>
             </div>
           </div>

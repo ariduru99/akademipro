@@ -20,13 +20,7 @@ export default function SchedulePage() {
   const hours = Array.from({ length: 15 }, (_, i) => `${i + 9}:00`);
   const days = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
 
-  const initialSchedule: ScheduleEvent[] = [
-    { id: 1, day: 0, hour: 10, duration: 1.5, title: 'LGS Matematik Grubu', type: 'class', color: 'primary' },
-    { id: 2, day: 2, hour: 14, duration: 1, title: 'İngilizce A2 (Zeynep)', type: 'class', color: 'yellow' },
-    { id: 3, day: 4, hour: 16, duration: 2, title: 'YKS Fizik Hızlandırma', type: 'class', color: 'purple' },
-    { id: 4, day: 1, hour: 19, duration: 1, title: 'Akşam Etüdü (Ali)', type: 'class', color: 'blue' },
-    { id: 5, day: 3, hour: 12, duration: 1, title: 'Doktor Randevusu', type: 'personal', color: 'slate' },
-  ];
+  const initialSchedule: ScheduleEvent[] = [];
 
   const [schedule, setSchedule] = useState<ScheduleEvent[]>(initialSchedule);
   const [isLoaded, setIsLoaded] = useState(false);

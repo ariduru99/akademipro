@@ -44,51 +44,7 @@ type StudentInsight = {
 
 const STORAGE_KEY = "students_data";
 
-const defaultStudents: Student[] = [
-  { id: 1, name: "Ali Yılmaz", parent: "Ahmet Yılmaz", phone: "+905551234567", email: "ali@example.com", grade: "8. Sınıf", courses: ["Matematik", "Fen"], status: "active" },
-  { id: 2, name: "Zeynep Kaya", parent: "Ayşe Kaya", phone: "+905559876543", email: "zeynep@example.com", grade: "12. Sınıf", courses: ["Fizik", "Geometri"], status: "active" },
-  { id: 3, name: "Can Özkan", parent: "Mehmet Özkan", phone: "+905554567890", email: "can@example.com", grade: "7. Sınıf", courses: ["Matematik"], status: "inactive" },
-  { id: 4, name: "Elif Çelik", parent: "Fatma Çelik", phone: "+905552223344", email: "elif@example.com", grade: "8. Sınıf", courses: ["Fen", "İngilizce"], status: "active" },
-];
-
-const namedInsights: Record<string, StudentInsight> = {
-  "Ali Yılmaz": {
-    attendanceRate: 92,
-    homeworkRate: 78,
-    nextLesson: "Yarın 19:00",
-    risk: "medium",
-    action: "Üslü sayılar ödevini derste birlikte kontrol et.",
-    summary: "Derslere düzenli katılıyor, ödev teslimlerinde kısa takip faydalı olur.",
-    trend: "+8 puan",
-  },
-  "Zeynep Kaya": {
-    attendanceRate: 96,
-    homeworkRate: 88,
-    nextLesson: "Çarşamba 14:00",
-    risk: "low",
-    action: "Bir sonraki ders için seviye atlama mini testi hazırla.",
-    summary: "Katılım ve ödev performansı güçlü; yeni kazanımlara hazır görünüyor.",
-    trend: "+12 puan",
-  },
-  "Can Özkan": {
-    attendanceRate: 61,
-    homeworkRate: 42,
-    nextLesson: "Planlanmadı",
-    risk: "high",
-    action: "Veliyle yeniden başlangıç görüşmesi planla.",
-    summary: "Pasif durumda; tekrar katılım için veli/öğrenci iletişimi öncelikli.",
-    trend: "-6 puan",
-  },
-  "Elif Çelik": {
-    attendanceRate: 84,
-    homeworkRate: 91,
-    nextLesson: "Perşembe 16:00",
-    risk: "low",
-    action: "Fen denemesi sonucuna göre kısa tekrar paketi gönder.",
-    summary: "Ödev disiplini yüksek, konu tekrarlarıyla performansını koruyor.",
-    trend: "+5 puan",
-  },
-};
+const defaultStudents: Student[] = [];
 
 const riskMeta: Record<StudentInsight["risk"], { label: string; className: string; dotClassName: string }> = {
   low: {
@@ -109,9 +65,6 @@ const riskMeta: Record<StudentInsight["risk"], { label: string; className: strin
 };
 
 function getStudentInsight(student: Student): StudentInsight {
-  const named = namedInsights[student.name];
-  if (named) return named;
-
   if (student.status === "inactive") {
     return {
       attendanceRate: 58,
@@ -316,7 +269,7 @@ export default function StudentsPage() {
           icon={<ClipboardCheck className="w-5 h-5" />}
           label="Ortalama Ödev"
           value={`%${studentStats.averageHomework}`}
-          hint="Demo takip skorlarının ortalaması"
+          hint="Takip skorlarının ortalaması"
           colorClass="bg-green-50 text-green-600"
         />
         <InsightCard
@@ -550,7 +503,7 @@ export default function StudentsPage() {
               <input
                 required
                 type="text"
-                placeholder="ogrenci@demo.com veya STD-8891"
+                placeholder="ogrenci@ornek.com veya STD-8891"
                 className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
               />
             </div>

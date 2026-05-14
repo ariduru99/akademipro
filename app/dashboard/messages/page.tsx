@@ -221,35 +221,8 @@ const STORAGE_KEY_THREADS = "messages_threads_v1";
 const STORAGE_KEY_CONTACTS = "messages_contacts_v1";
 const STORAGE_KEY_NOTES = "messages_notes_v1";
 
-const defaultContacts: Contact[] = [
-  { id: 1, name: "Ali Yılmaz", role: "Öğrenci", lastMessage: "Hocam, ödevi sisteme yükledim.", time: "10:42", unread: 2, isOnline: true },
-  { id: 2, name: "Zeynep Kaya", role: "Öğrenci", lastMessage: "Yarınki ders saat kaçtaydı?", time: "Dün", unread: 0, isOnline: false },
-  { id: 3, name: "Ahmet Bey", role: "Veli (Ali)", lastMessage: "Teşekkürler hocam.", time: "Pzt", unread: 0, isOnline: true },
-  { id: 4, name: "LGS Matematik Grubu", role: "Grup (5 Kişi)", lastMessage: "Sınav sonuçları açıklandı.", time: "Pzt", unread: 0, isOnline: false },
-];
-
-const seedThreads: Record<number, ChatMessage[]> = {
-  1: [
-    { id: 1, text: "Merhaba hocam, nasılsınız?", sender: "them", time: "10:30" },
-    { id: 2, text: "Teşekkürler Ali, iyiyim. Sen nasılsın?", sender: "me", time: "10:35" },
-    { id: 3, text: "Hocam, ödevi sisteme yükledim.", sender: "them", time: "10:42" },
-  ],
-  2: [
-    { id: 1, text: "Hocam merhaba", sender: "them", time: "Dün 14:20" },
-    { id: 2, text: "Merhaba Zeynep, buyur.", sender: "me", time: "Dün 14:25" },
-    { id: 3, text: "Yarınki ders saat kaçtaydı?", sender: "them", time: "Dün 15:02" },
-  ],
-  3: [
-    { id: 1, text: "Merhaba, Ali’nin bu haftaki notlarını görebilir miyim?", sender: "them", time: "Pzt 09:10" },
-    { id: 2, text: "Tabii Ahmet Bey, panodan paylaştım.", sender: "me", time: "Pzt 09:18" },
-    { id: 3, text: "Teşekkürler hocam.", sender: "them", time: "Pzt 09:22" },
-  ],
-  4: [
-    { id: 1, text: "Arkadaşlar bu hafta deneme sınavı varyantını ekledim.", sender: "me", time: "Pzt 08:00" },
-    { id: 2, text: "Teşekkürler hocam, çözmeye başlıyoruz.", sender: "them", time: "Pzt 08:15" },
-    { id: 3, text: "Sınav sonuçları açıklandı.", sender: "me", time: "Pzt 16:40" },
-  ],
-};
+const defaultContacts: Contact[] = [];
+const emptyThreads: Record<number, ChatMessage[]> = {};
 
 function normalizeMessage(raw: unknown): ChatMessage | null {
   if (!raw || typeof raw !== "object") return null;
@@ -272,7 +245,7 @@ function normalizeMessage(raw: unknown): ChatMessage | null {
 }
 
 function mergeThreadsFromStorage(parsed: unknown): Record<number, ChatMessage[]> {
-  const out: Record<number, ChatMessage[]> = { ...seedThreads };
+  const out: Record<number, ChatMessage[]> = {};
   if (parsed && typeof parsed === "object") {
     for (const [k, v] of Object.entries(parsed as Record<string, unknown[]>)) {
       const id = Number(k);
@@ -290,8 +263,8 @@ function isFileMessage(m: ChatMessage): m is FileMessage {
 
 export default function MessagesPage() {
   const [contacts, setContacts] = useState<Contact[]>(defaultContacts);
-  const [threads, setThreads] = useState<Record<number, ChatMessage[]>>(seedThreads);
-  const [activeId, setActiveId] = useState(defaultContacts[0].id);
+  const [threads, setThreads] = useState<Record<number, ChatMessage[]>>(emptyThreads);
+  const [activeId, setActiveId] = useState(defaultContacts[0]?.id ?? -1);
   const [message, setMessage] = useState("");
   const [hydrated, setHydrated] = useState(false);
   const [notesByContact, setNotesByContact] = useState<Record<number, string>>({});

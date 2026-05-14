@@ -28,42 +28,21 @@ type PaymentRequest = {
 };
 
 const STORAGE_KEY = "payment_requests";
+const STUDENTS_STORAGE_KEY = "students_data";
 
-const initialRequests: PaymentRequest[] = [
-  {
-    id: 1,
-    student: "Ali Yılmaz",
-    parent: "Ahmet Bey",
-    desc: "Mayıs Ayı Matematik Dersleri (8 Seans)",
-    amount: 4800,
-    date: "1 Mayıs 2026",
-    status: "pending",
-  },
-  {
-    id: 2,
-    student: "Zeynep Kaya",
-    parent: "Ayşe Hanım",
-    desc: "İngilizce A2 - 4 Ders",
-    amount: 1800,
-    date: "28 Nisan 2026",
-    status: "paid",
-  },
-  {
-    id: 3,
-    student: "Elif Çelik",
-    parent: "Fatma Hanım",
-    desc: "Nisan Ayı Fen Bilimleri",
-    amount: 2400,
-    date: "15 Nisan 2026",
-    status: "confirmed",
-  },
-];
+type StudentOption = {
+  name: string;
+  parent: string;
+};
+
+const initialRequests: PaymentRequest[] = [];
 
 export default function PaymentsPage() {
   const { role: userRole, fullName } = useProfile();
   const [requests, setRequests] = useState<PaymentRequest[]>(initialRequests);
   const [hydrated, setHydrated] = useState(false);
   const [paymentInfo, setPaymentInfo] = useState<PaymentInfo>({ iban: "", bankName: "", accountHolder: "" });
+  const [studentOptions, setStudentOptions] = useState<StudentOption[]>([]);
 
   const [isNewRequestOpen, setIsNewRequestOpen] = useState(false);
   const [newReq, setNewReq] = useState({ student: "", desc: "", amount: "" });
@@ -78,6 +57,17 @@ export default function PaymentsPage() {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) setRequests(JSON.parse(saved));
+      const studentsRaw = localStorage.getItem(STUDENTS_STORAGE_KEY);
+      if (studentsRaw) {
+        const parsed = JSON.parse(studentsRaw) as Array<{ name?: string; parent?: string }>;
+        if (Array.isArray(parsed)) {
+          setStudentOptions(
+            parsed
+              .filter((s) => s.name)
+              .map((s) => ({ name: String(s.name), parent: s.parent ? String(s.parent) : "Veli" }))
+          );
+        }
+      }
     } catch (e) {
       console.error("payment requests load", e);
     }
@@ -106,11 +96,12 @@ export default function PaymentsPage() {
       return;
     }
     if (newReq.student && newReq.amount) {
+      const selectedStudent = studentOptions.find((s) => s.name === newReq.student);
       setRequests([
         {
           id: Date.now(),
           student: newReq.student,
-          parent: newReq.student === "Ali Yılmaz" ? "Ahmet Bey" : "Veli",
+          parent: selectedStudent?.parent || "Veli",
           desc: newReq.desc || "Ders ücreti",
           amount: parseInt(newReq.amount, 10),
           date: new Date().toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" }),
@@ -403,11 +394,17 @@ export default function PaymentsPage() {
                   className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-500 bg-white"
                 >
                   <option value="">Seçin...</option>
-                  <option>Ali Yılmaz</option>
-                  <option>Zeynep Kaya</option>
-                  <option>Elif Çelik</option>
-                  <option>Can Özkan</option>
+                  {studentOptions.map((student) => (
+                    <option key={student.name} value={student.name}>
+                      {student.name} · {student.parent}
+                    </option>
+                  ))}
                 </select>
+                {studentOptions.length === 0 && (
+                  <p className="text-xs text-amber-700 mt-2">
+                    Önce Öğrenci & Veli ekranından öğrenci ekleyin.
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Açıklama</label>

@@ -12,6 +12,9 @@ import {
   todayScheduleDay,
 } from '@/lib/scheduleSync';
 import { sendNotification } from '@/lib/notifications';
+import { readUserState, writeUserState } from '@/lib/appState';
+
+const initialSchedule: ScheduleEvent[] = [];
 
 export default function SchedulePage() {
   const [view, setView] = useState<'haftalik' | 'arsiv'>('haftalik');
@@ -19,14 +22,6 @@ export default function SchedulePage() {
   // Extend hours up to 23:00 for evening classes
   const hours = Array.from({ length: 15 }, (_, i) => `${i + 9}:00`);
   const days = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
-
-  const initialSchedule: ScheduleEvent[] = [
-    { id: 1, day: 0, hour: 10, duration: 1.5, title: 'LGS Matematik Grubu', type: 'class', color: 'primary' },
-    { id: 2, day: 2, hour: 14, duration: 1, title: 'İngilizce A2 (Zeynep)', type: 'class', color: 'yellow' },
-    { id: 3, day: 4, hour: 16, duration: 2, title: 'YKS Fizik Hızlandırma', type: 'class', color: 'purple' },
-    { id: 4, day: 1, hour: 19, duration: 1, title: 'Akşam Etüdü (Ali)', type: 'class', color: 'blue' },
-    { id: 5, day: 3, hour: 12, duration: 1, title: 'Doktor Randevusu', type: 'personal', color: 'slate' },
-  ];
 
   const [schedule, setSchedule] = useState<ScheduleEvent[]>(initialSchedule);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -64,20 +59,26 @@ export default function SchedulePage() {
       month: 'short',
     });
 
-  // Load/Save from LocalStorage to persist
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('schedule_data');
-      if (saved) setSchedule(JSON.parse(saved));
-    } catch (e) {
+    let cancelled = false;
+    readUserState<ScheduleEvent[]>('schedule_data', initialSchedule)
+      .then((saved) => {
+        if (!cancelled && Array.isArray(saved)) setSchedule(saved);
+      })
+      .catch((e) => {
       console.error("Error loading schedule data", e);
-    }
-    setIsLoaded(true);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoaded(true);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
     if (isLoaded) {
-      localStorage.setItem('schedule_data', JSON.stringify(schedule));
+      void writeUserState('schedule_data', schedule).catch((e) => console.error("Error saving schedule data", e));
     }
   }, [schedule, isLoaded]);
 

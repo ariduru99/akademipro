@@ -29,8 +29,9 @@ import {
   markNotificationRead,
 } from "@/lib/notifications";
 import { useProfile } from "@/lib/profile";
-import { logoutClient } from "@/lib/authAccounts";
-import { seedDemoData } from "@/lib/dataSeeder";
+import { logoutClient, restoreLiveSession } from "@/lib/authAccounts";
+import { clearObsoleteBrowserStateOnce } from "@/lib/legacyCleanup";
+import { readUserState, writeUserState } from "@/lib/appState";
 
 
 const STATUS_KEY = "user_status";
@@ -72,6 +73,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [sessionRestored, setSessionRestored] = useState(false);
 
   const notifBtnRef = useRef<HTMLDivElement>(null);
   const statusBtnRef = useRef<HTMLDivElement>(null);
@@ -84,25 +86,40 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!hydrated || session) return;
-    router.replace("/login");
-  }, [hydrated, session, router]);
+    if (session) clearObsoleteBrowserStateOnce();
+  }, [session]);
 
   useEffect(() => {
-    seedDemoData();
+    if (!hydrated || session || sessionRestored) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const restored = await restoreLiveSession();
+        if (!cancelled && !restored) router.replace("/login");
+      } catch {
+        if (!cancelled) router.replace("/login");
+      } finally {
+        if (!cancelled) setSessionRestored(true);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [hydrated, session, sessionRestored, router]);
+
+  useEffect(() => {
     refreshNotifications();
 
     const onChange = () => refreshNotifications();
     window.addEventListener(NOTIFICATIONS_UPDATED_EVENT, onChange);
     window.addEventListener("storage", onChange);
-    try {
-      const saved = localStorage.getItem(STATUS_KEY);
-      if (saved && STATUS_OPTIONS.includes(saved as StatusValue)) {
-        setStatus(saved as StatusValue);
-      }
-    } catch {
-      /* ignore */
-    }
+    void readUserState<StatusValue>(STATUS_KEY, "Online")
+      .then((saved) => {
+        if (saved && STATUS_OPTIONS.includes(saved)) setStatus(saved);
+      })
+      .catch(() => {});
     return () => {
       window.removeEventListener(NOTIFICATIONS_UPDATED_EVENT, onChange);
       window.removeEventListener("storage", onChange);
@@ -201,11 +218,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const updateStatus = (s: StatusValue) => {
     setStatus(s);
     setShowStatusMenu(false);
-    try {
-      localStorage.setItem(STATUS_KEY, s);
-    } catch {
-      /* ignore */
-    }
+    void writeUserState(STATUS_KEY, s).catch(() => {});
   };
 
   const isMessagesPage = pathname?.startsWith("/dashboard/messages") ?? false;
@@ -321,7 +334,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               href="/dashboard"
               className="md:hidden flex items-center gap-2 text-lg font-bold text-primary-600"
             >
-              <BookOpen className="w-5 h-5" /> EduCoach
+              <BookOpen className="w-5 h-5" /> Akademi Pro
             </Link>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">

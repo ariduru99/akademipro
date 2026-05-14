@@ -2,20 +2,20 @@ import type { Metadata } from "next";
 import { LegalLayout } from "@/components/LegalLayout";
 
 export const metadata: Metadata = {
-  title: "Gizlilik Politikası | EduCoach",
+  title: "Gizlilik Politikası | Akademi Pro",
   description:
-    "EduCoach platformunun gizlilik politikası, kişisel verilerin işlenmesi ve KVKK aydınlatma metni.",
+    "Akademi Pro platformunun gizlilik politikası, kişisel verilerin işlenmesi ve KVKK aydınlatma metni.",
 };
 
 export default function PrivacyPage() {
   return (
     <LegalLayout
       title="Gizlilik Politikası ve KVKK Aydınlatma Metni"
-      subtitle="EduCoach olarak gizliliğinize değer veriyoruz."
+      subtitle="Akademi Pro olarak gizliliğinize değer veriyoruz."
       updatedAt="8 Mayıs 2026"
     >
       <p>
-        Bu Gizlilik Politikası, EduCoach platformunu (&quot;Platform&quot;) kullanan ziyaretçi, öğrenci, veli ve
+        Bu Gizlilik Politikası, Akademi Pro platformunu (&quot;Platform&quot;) kullanan ziyaretçi, öğrenci, veli ve
         eğitmenlerin (&quot;Kullanıcı&quot;) kişisel verilerinin nasıl toplandığını, işlendiğini, saklandığını ve
         korunduğunu açıklar. 6698 sayılı Kişisel Verilerin Korunması Kanunu (&quot;KVKK&quot;) kapsamında veri
         sorumlusu olarak hareket etmekteyiz.
@@ -23,7 +23,7 @@ export default function PrivacyPage() {
 
       <h2>1. Veri Sorumlusu</h2>
       <p>
-        Veri sorumlusu: EduCoach (örnek tüzel kişi adı). Tebligat adresi ve iletişim bilgileri{" "}
+        Veri sorumlusu: Akademi Pro. Tebligat adresi ve iletişim bilgileri{" "}
         <a href="/iletisim">İletişim sayfasında</a> yer almaktadır.
       </p>
 

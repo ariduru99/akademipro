@@ -23,49 +23,25 @@ import {
   todayScheduleDay,
   formatScheduleEventLabel,
 } from "@/lib/scheduleSync";
+import { readUserState, writeUserState } from "@/lib/appState";
 
 type Approval = { id: number; text: string; detail: string };
 type Announcement = { id: number; title: string; text: string; target: string };
 
-const HOMEWORKS = [
-  {
-    id: 1,
-    subject: "Matematik",
-    desc: "Üslü Sayılar Test 1 ve 2 Çözülecek",
-    deadline: "Yarın 23:59",
-    student: "Ali Yılmaz",
-    files: [
-      { name: "uslu_sayilar_test1.pdf", size: "1.2 MB", date: "5 Mayıs 2026" },
-      { name: "cozumlerim_foto.jpg", size: "3.4 MB", date: "5 Mayıs 2026" },
-    ],
-  },
-  {
-    id: 2,
-    subject: "Fizik",
-    desc: "Kuvvet ve Hareket Özeti Çıkarılacak",
-    deadline: "Cuma 18:00",
-    student: "Zeynep Kaya",
-    files: [{ name: "kuvvet_hareket_ozet.docx", size: "840 KB", date: "4 Mayıs 2026" }],
-  },
-];
+const HOMEWORKS: Array<{
+  id: number;
+  subject: string;
+  desc: string;
+  deadline: string;
+  student: string;
+  files: Array<{ name: string; size: string; date: string }>;
+}> = [];
 
 export default function Dashboard() {
   const { hydrated, role: userRole, firstName } = useProfile();
 
-  const defaultApprovals: Approval[] = [
-    { id: 1, text: "Ödeme Onayı (Ali Y.)", detail: "Dün 14:00 Dersi - ₺600" },
-  ];
-  const defaultAnnouncements: Announcement[] = [
-    {
-      id: 1,
-      title: "Deneme Sınavı Haftası",
-      text: "Tüm Matematik öğrencilerine Cuma günü genel LGS denemesi atanacak. Veli bilgilendirmesini unutma.",
-      target: "Tüm Öğrenciler",
-    },
-  ];
-
-  const [approvals, setApprovals] = useState<Approval[]>(defaultApprovals);
-  const [announcements, setAnnouncements] = useState<Announcement[]>(defaultAnnouncements);
+  const [approvals, setApprovals] = useState<Approval[]>([]);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [schedule, setSchedule] = useState<ScheduleEvent[]>([]);
   const [studentsCount, setStudentsCount] = useState<number | null>(null);
   const [confirmedTotal, setConfirmedTotal] = useState<number>(0);
@@ -73,44 +49,42 @@ export default function Dashboard() {
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    try {
-      const savedAnn = localStorage.getItem("dashboard_announcements");
-      const savedApp = localStorage.getItem("dashboard_approvals");
-      if (savedAnn) setAnnouncements(JSON.parse(savedAnn));
-      if (savedApp) setApprovals(JSON.parse(savedApp));
-
-      const sched = localStorage.getItem("schedule_data");
-      if (sched) {
-        const parsed = JSON.parse(sched) as unknown;
-        if (Array.isArray(parsed)) setSchedule(parsed as ScheduleEvent[]);
-      }
-
-      const studentsRaw = localStorage.getItem("students_data");
-      if (studentsRaw) {
-        const arr = JSON.parse(studentsRaw) as unknown;
-        if (Array.isArray(arr)) setStudentsCount(arr.length);
-      }
-
-      const payRaw = localStorage.getItem("payment_requests");
-      if (payRaw) {
-        const list = JSON.parse(payRaw) as Array<{ amount: number; status: string }>;
-        if (Array.isArray(list)) {
-          setConfirmedTotal(list.filter((r) => r.status === "confirmed").reduce((s, r) => s + r.amount, 0));
-          setPendingPaymentTotal(list.filter((r) => r.status === "pending").reduce((s, r) => s + r.amount, 0));
+    let cancelled = false;
+    Promise.all([
+      readUserState<Announcement[]>("dashboard_announcements", []),
+      readUserState<Approval[]>("dashboard_approvals", []),
+      readUserState<ScheduleEvent[]>("schedule_data", []),
+      readUserState<Array<unknown>>("students_data", []),
+      readUserState<Array<{ amount: number; status: string }>>("payment_requests", []),
+    ])
+      .then(([savedAnn, savedApp, sched, students, payments]) => {
+        if (cancelled) return;
+        if (Array.isArray(savedAnn)) setAnnouncements(savedAnn);
+        if (Array.isArray(savedApp)) setApprovals(savedApp);
+        if (Array.isArray(sched)) setSchedule(sched);
+        if (Array.isArray(students)) setStudentsCount(students.length);
+        if (Array.isArray(payments)) {
+          setConfirmedTotal(payments.filter((r) => r.status === "confirmed").reduce((s, r) => s + r.amount, 0));
+          setPendingPaymentTotal(payments.filter((r) => r.status === "pending").reduce((s, r) => s + r.amount, 0));
         }
-      }
-    } catch (e) {
+      })
+      .catch((e) => {
       console.error("dashboard data load", e);
-    }
-    setIsLoaded(true);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoaded(true);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
-    if (isLoaded) localStorage.setItem("dashboard_announcements", JSON.stringify(announcements));
+    if (isLoaded) void writeUserState("dashboard_announcements", announcements).catch((e) => console.error("announcements save", e));
   }, [announcements, isLoaded]);
 
   useEffect(() => {
-    if (isLoaded) localStorage.setItem("dashboard_approvals", JSON.stringify(approvals));
+    if (isLoaded) void writeUserState("dashboard_approvals", approvals).catch((e) => console.error("approvals save", e));
   }, [approvals, isLoaded]);
 
   const todayIso = useMemo(() => todayISODate(), []);
@@ -537,7 +511,7 @@ export default function Dashboard() {
                               </p>
                             </div>
                           </div>
-                          <span className="text-[10px] text-slate-400 shrink-0 ml-2">Demo dosya</span>
+                          <span className="text-[10px] text-slate-400 shrink-0 ml-2">Yüklenen dosya</span>
                         </div>
                       ))}
                     </div>
@@ -589,9 +563,8 @@ export default function Dashboard() {
                 >
                   <option value="Tüm Öğrenciler">Tüm Öğrenciler</option>
                   <option value="Tüm Veliler">Tüm Veliler</option>
-                  <option value="Sadece: LGS Matematik Grubu">Sadece: LGS Matematik Grubu</option>
-                  <option value="Özel: Ali Yılmaz">Özel Ders: Ali Yılmaz</option>
-                  <option value="Özel: Zeynep Kaya">Özel Ders: Zeynep Kaya</option>
+                  <option value="Belirli Grup">Belirli Grup</option>
+                  <option value="Tek Öğrenci">Tek Öğrenci</option>
                 </select>
               </div>
               <div>

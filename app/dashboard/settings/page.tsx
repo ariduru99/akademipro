@@ -39,18 +39,22 @@ import {
   setAvatar,
   useProfile,
 } from "@/lib/profile";
+import { isSupabaseClientConfigured } from "@/lib/authEnv";
+import { supabase } from "@/lib/supabase";
+import { readUserState } from "@/lib/appState";
 
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
 
 export default function SettingsPage() {
   const [toast, setToast] = useState("");
   const [activeSection, setActiveSection] = useState("profile");
-  const { avatar, initials, settings: profileSettings, hydrated: profileHydrated } = useProfile();
+  const { avatar, initials, session, settings: profileSettings, hydrated: profileHydrated } = useProfile();
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [isSynced, setIsSynced] = useState(false);
 
   const [pwError, setPwError] = useState<string | null>(null);
   const [pwOk, setPwOk] = useState<string | null>(null);
+  const [pwLoading, setPwLoading] = useState(false);
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [avatarError, setAvatarError] = useState<string | null>(null);
@@ -69,9 +73,16 @@ export default function SettingsPage() {
         setSettings(latest);
       } else if (profileSettings.fullName) {
         setSettings(profileSettings);
+      } else if (session) {
+        setSettings({
+          ...latest,
+          fullName: session.full_name || latest.fullName,
+          email: session.email || latest.email,
+          city: session.city || latest.city,
+        });
       }
     }
-  }, [profileHydrated, profileSettings, settings.fullName]);
+  }, [profileHydrated, profileSettings, session, settings.fullName]);
 
 
 
@@ -116,8 +127,8 @@ export default function SettingsPage() {
     setTestingChannel(channels ? channels.join(",") : "all");
     const beforeIds = new Set(outbox.map((e) => e.id));
     const results = await sendNotification({
-      title: "EduCoach test bildirimi",
-      body: `Merhaba ${settings.fullName.split(" ")[0] || "orada"}! Bu bir test bildirimidir — kanallarınız çalışıyor.`,
+      title: "Akademi Pro kontrol bildirimi",
+      body: `Merhaba ${settings.fullName.split(" ")[0] || "orada"}! Bu kontrol bildirimi kanallarınızın çalıştığını doğrular.`,
       kind: "system",
       channels,
     });
@@ -132,7 +143,7 @@ export default function SettingsPage() {
           r.status === "sent"
             ? "gönderildi"
             : r.status === "queued"
-              ? "kuyruğa alındı (demo)"
+              ? "kuyruğa alındı"
               : r.status === "skipped"
                 ? "atlandı"
                 : "hata";
@@ -158,9 +169,18 @@ export default function SettingsPage() {
     showToast("Değişiklikler başarıyla kaydedildi!");
   };
 
-  const handleChangePassword = () => {
+  const handleChangePassword = async () => {
     setPwError(null);
     setPwOk(null);
+    if (!isSupabaseClientConfigured() || !supabase) {
+      setPwError("Şifre güncellemek için Supabase kimlik altyapısı yapılandırılmalı.");
+      return;
+    }
+    const emailForPasswordChange = settings.email || session?.email || "";
+    if (!emailForPasswordChange) {
+      setPwError("Şifre güncellemek için profil e-postanızı kaydedin.");
+      return;
+    }
     if (!settings.currentPassword) {
       setPwError("Mevcut şifrenizi girin.");
       return;
@@ -173,11 +193,31 @@ export default function SettingsPage() {
       setPwError("Yeni şifre, mevcut şifreden farklı olmalı.");
       return;
     }
-    setSettings({ ...settings, currentPassword: "", newPassword: "" });
-    setPwOk(
-      "Şifre değişikliği şu an yerel olarak doğrulanır; gerçek doğrulama Supabase entegrasyonu sonrası aktif olacak."
-    );
-    setTimeout(() => setPwOk(null), 6000);
+    setPwLoading(true);
+    try {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: emailForPasswordChange,
+        password: settings.currentPassword,
+      });
+      if (signInError) {
+        throw new Error("Mevcut şifreniz doğrulanamadı.");
+      }
+
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: settings.newPassword,
+      });
+      if (updateError) {
+        throw new Error(updateError.message || "Şifre güncellenemedi.");
+      }
+
+      setSettings({ ...settings, currentPassword: "", newPassword: "" });
+      setPwOk("Şifreniz başarıyla güncellendi.");
+      setTimeout(() => setPwOk(null), 6000);
+    } catch (err) {
+      setPwError(err instanceof Error ? err.message : "Şifre güncellenemedi.");
+    } finally {
+      setPwLoading(false);
+    }
   };
 
   const handlePickAvatar = () => fileInputRef.current?.click();
@@ -211,10 +251,9 @@ export default function SettingsPage() {
     showToast("Profil fotoğrafı kaldırıldı.");
   };
 
-  const handleDownloadIncomeReport = () => {
+  const handleDownloadIncomeReport = async () => {
     try {
-      const raw = localStorage.getItem("payment_requests");
-      const list = raw ? (JSON.parse(raw) as Array<{ amount: number; date: string; status: string; desc?: string; student?: string }>) : [];
+      const list = await readUserState<Array<{ amount: number; date: string; status: string; desc?: string; student?: string }>>("payment_requests", []);
       const confirmed = list.filter((r) => r.status === "confirmed");
       const csv = [
         ["Tarih", "Öğrenci", "Açıklama", "Tutar (TRY)"],
@@ -226,7 +265,7 @@ export default function SettingsPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `EduCoach-gelir-raporu-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.download = `akademi-pro-gelir-raporu-${new Date().toISOString().slice(0, 10)}.csv`;
       a.click();
       URL.revokeObjectURL(url);
       showToast("Gelir raporu indirildi.");
@@ -437,9 +476,10 @@ export default function SettingsPage() {
                     <button
                       type="button"
                       onClick={handleChangePassword}
-                      className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-bold hover:bg-primary-700 transition-colors"
+                      disabled={pwLoading}
+                      className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-bold hover:bg-primary-700 transition-colors disabled:opacity-60"
                     >
-                      Şifreyi Güncelle
+                      {pwLoading ? "Güncelleniyor..." : "Şifreyi Güncelle"}
                     </button>
                   </div>
                 </div>
@@ -453,7 +493,7 @@ export default function SettingsPage() {
                   <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                     <Bell className="w-5 h-5 text-primary-600" /> Bildirim Tercihleri
                   </h3>
-                  <p className="text-sm text-slate-500 mt-1">Hangi kanalları açacağınızı seçin, test bildirimi gönderin ve son aktiviteleri görün.</p>
+                  <p className="text-sm text-slate-500 mt-1">Hangi kanalları açacağınızı seçin, kontrol bildirimi gönderin ve son aktiviteleri görün.</p>
                 </div>
                 <div className="p-6 space-y-6">
                   {providers && !providers.email.configured && (
@@ -461,7 +501,7 @@ export default function SettingsPage() {
                       <div className="flex items-start gap-3">
                         <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                         <div className="flex-1 text-sm">
-                          <p className="font-bold text-amber-900">Demo modu — gerçek e-posta gönderilmiyor</p>
+                          <p className="font-bold text-amber-900">E-posta sağlayıcısı yapılandırılmamış</p>
                           <p className="text-amber-800 mt-1">
                             Test edilen e-postalar yalnızca aşağıdaki <strong>outbox</strong> tablosuna kaydediliyor.
                           </p>
@@ -489,7 +529,7 @@ export default function SettingsPage() {
                                 </ol>
                                 <pre className="font-mono bg-amber-100/70 rounded p-2 mt-1 whitespace-pre-wrap">
                                   RESEND_API_KEY=re_xxxxxxxx{"\n"}
-                                  NOTIFY_EMAIL_FROM=&quot;EduCoach &lt;onboarding@resend.dev&gt;&quot;
+                                  NOTIFY_EMAIL_FROM=&quot;Akademi Pro &lt;onboarding@resend.dev&gt;&quot;
                                 </pre>
                               </div>
                               <p>
@@ -637,7 +677,7 @@ export default function SettingsPage() {
                     <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
                       <div>
                         <h4 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                          <Send className="w-4 h-4 text-primary-600" /> Test bildirimi
+                          <Send className="w-4 h-4 text-primary-600" /> Kontrol bildirimi
                         </h4>
                         <p className="text-xs text-slate-500">Aktif kanallarınıza anlık bir test gönderir.</p>
                       </div>
@@ -694,7 +734,7 @@ export default function SettingsPage() {
                               r.status === "sent"
                                 ? "Gönderildi"
                                 : r.status === "queued"
-                                  ? "Demo · Outbox'a yazıldı"
+                                  ? "Outbox'a yazıldı"
                                   : r.status === "skipped"
                                     ? "Atlandı"
                                     : "Hata";
@@ -863,7 +903,7 @@ export default function SettingsPage() {
                   <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3 items-start">
                     <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                     <div className="text-sm text-amber-800">
-                      <strong>Bilgilendirme:</strong> Serbest meslek erbabı olarak elde ettiğiniz gelirleri vergi beyannamenizde beyan etmeniz gerekmektedir. EduCoach ödeme geçmişinizi raporlayarak vergi döneminizde kolaylık sağlar. <strong>Platform herhangi bir vergi kesintisi yapmaz</strong>, sorumluluk size aittir.
+                      <strong>Bilgilendirme:</strong> Serbest meslek erbabı olarak elde ettiğiniz gelirleri vergi beyannamenizde beyan etmeniz gerekmektedir. Akademi Pro ödeme geçmişinizi raporlayarak vergi döneminizde kolaylık sağlar. <strong>Platform herhangi bir vergi kesintisi yapmaz</strong>, sorumluluk size aittir.
                     </div>
                   </div>
 

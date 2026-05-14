@@ -3,16 +3,16 @@
 /**
  * Ortak profil/oturum yardımcıları.
  * - app_settings (Settings sayfasının formu)
- * - auth_session (Login sayfası)
  * - teacher_payment_info (Settings IBAN bölümü)
  * - profile_avatar (base64)
- * Birden fazla sayfada tutarlı veri için tek kaynak.
+ * Kimlik oturumu için tek kaynak Supabase Auth + public.profiles tablosudur.
  */
 
 import { useEffect, useState } from "react";
+import { isSupabaseClientConfigured } from "@/lib/authEnv";
+import { supabase } from "@/lib/supabase";
 
 export const SETTINGS_KEY = "app_settings";
-export const SESSION_KEY = "auth_session";
 export const PAYMENT_INFO_KEY = "teacher_payment_info";
 export const AVATAR_KEY = "profile_avatar";
 export const PROFILE_UPDATED_EVENT = "profile:updated";
@@ -80,26 +80,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
 
 const isBrowser = () => typeof window !== "undefined";
 
-export function getSession(): SessionUser | null {
-  if (!isBrowser()) return null;
-  try {
-    const raw = localStorage.getItem(SESSION_KEY);
-    if (!raw) return null;
-    const p = JSON.parse(raw) as Partial<SessionUser>;
-    if (!p?.id || !p?.role) return null;
-    return {
-      id: p.id,
-      role: p.role,
-      full_name: p.full_name || "",
-      email: p.email || "",
-      profile_code: p.profile_code,
-      city: p.city,
-    };
-  } catch {
-    return null;
-  }
-}
-
 export function getStoredSettings(): AppSettings {
   if (!isBrowser()) return { ...DEFAULT_SETTINGS };
   try {
@@ -124,16 +104,6 @@ export function persistSettings(next: AppSettings): void {
       accountHolder: safe.accountHolder || safe.fullName,
     } satisfies PaymentInfo)
   );
-  const session = getSession();
-  if (session) {
-    const updated: SessionUser = {
-      ...session,
-      full_name: safe.fullName || session.full_name,
-      email: safe.email || session.email,
-      city: safe.city || session.city,
-    };
-    localStorage.setItem(SESSION_KEY, JSON.stringify(updated));
-  }
   emitProfileChange();
 }
 
@@ -177,6 +147,37 @@ export function emitProfileChange(): void {
   window.dispatchEvent(new CustomEvent(PROFILE_UPDATED_EVENT));
 }
 
+async function readSupabaseSession(): Promise<SessionUser | null> {
+  if (!isBrowser() || !isSupabaseClientConfigured() || !supabase) return null;
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  const user = session?.user;
+  if (!user?.id) return null;
+
+  const { data: profile, error } = await supabase
+    .from("profiles")
+    .select("id, role, full_name, profile_code, city")
+    .eq("id", user.id)
+    .single();
+
+  if (error || !profile) return null;
+
+  const role = profile.role as UserRole;
+  if (role !== "teacher" && role !== "student" && role !== "parent") return null;
+
+  return {
+    id: profile.id,
+    role,
+    full_name: profile.full_name || user.email?.split("@")[0] || "Kullanıcı",
+    email: user.email || "",
+    profile_code: profile.profile_code,
+    city: profile.city ?? undefined,
+  };
+}
+
 /** Kullanıcı oturumunu, ayarlarını ve avatarını dinleyen reaktif hook. */
 export function useProfile() {
   const [session, setSession] = useState<SessionUser | null>(null);
@@ -185,18 +186,40 @@ export function useProfile() {
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    const refresh = () => {
-      setSession(getSession());
-      setSettings(getStoredSettings());
+    let cancelled = false;
+
+    const refresh = async () => {
+      const liveSession = await readSupabaseSession();
+      if (cancelled) return;
+
+      const storedSettings = getStoredSettings();
+      setSession(liveSession);
+      setSettings({
+        ...storedSettings,
+        fullName: storedSettings.fullName || liveSession?.full_name || "",
+        email: storedSettings.email || liveSession?.email || "",
+        city: storedSettings.city || liveSession?.city || "",
+      });
       setAvatarState(getAvatar());
+      setHydrated(true);
     };
-    refresh();
-    setHydrated(true);
-    window.addEventListener(PROFILE_UPDATED_EVENT, refresh);
-    window.addEventListener("storage", refresh);
+
+    void refresh();
+    const onRefresh = () => void refresh();
+    window.addEventListener(PROFILE_UPDATED_EVENT, onRefresh);
+    window.addEventListener("storage", onRefresh);
+
+    const {
+      data: { subscription },
+    } = supabase?.auth.onAuthStateChange(() => {
+      void refresh();
+    }) ?? { data: { subscription: null } };
+
     return () => {
-      window.removeEventListener(PROFILE_UPDATED_EVENT, refresh);
-      window.removeEventListener("storage", refresh);
+      cancelled = true;
+      window.removeEventListener(PROFILE_UPDATED_EVENT, onRefresh);
+      window.removeEventListener("storage", onRefresh);
+      subscription?.unsubscribe();
     };
   }, []);
 
@@ -223,7 +246,5 @@ export function useProfile() {
 }
 
 export function clearSession(): void {
-  if (!isBrowser()) return;
-  localStorage.removeItem(SESSION_KEY);
   emitProfileChange();
 }

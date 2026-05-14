@@ -66,11 +66,11 @@ export function getProvidersStatus(): ProvidersStatus {
   return {
     email: {
       configured: emailConfigured,
-      provider: emailConfigured ? "Resend" : "Outbox (simülasyon)",
+      provider: emailConfigured ? "Resend" : "Outbox",
     },
     sms: {
       configured: smsConfigured,
-      provider: smsConfigured ? "Twilio" : "Outbox (simülasyon)",
+      provider: smsConfigured ? "Twilio" : "Outbox",
     },
   };
 }

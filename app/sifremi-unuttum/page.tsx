@@ -3,11 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { BookOpen, Loader2, AlertCircle, CheckCircle2, ArrowLeft } from "lucide-react";
-import { isSupabaseClientConfigured } from "@/lib/authEnv";
 import { requestPasswordReset } from "@/lib/authAccounts";
 
 export default function ForgotPasswordPage() {
-  const liveAuth = isSupabaseClientConfigured();
   const [identifier, setIdentifier] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -37,7 +35,7 @@ export default function ForgotPasswordPage() {
             className="inline-flex items-center gap-2 text-2xl font-bold text-primary-600 mb-2 hover:scale-105 transition-transform"
           >
             <BookOpen className="w-8 h-8" />
-            EduCoach
+            Akademi Pro
           </Link>
           <p className="text-slate-500">Şifrenizi mi unuttunuz? Sıfırlama bağlantısı gönderelim.</p>
         </div>
@@ -66,7 +64,7 @@ export default function ForgotPasswordPage() {
               )}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  {liveAuth ? "E-posta adresi" : "E-posta veya profil kodu"}
+                  E-posta adresi
                 </label>
                 <input
                   type="text"
@@ -74,7 +72,7 @@ export default function ForgotPasswordPage() {
                   onChange={(e) => setIdentifier(e.target.value)}
                   required
                   className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
-                  placeholder={liveAuth ? "ornek@email.com" : "ornek@email.com veya TCH-9024"}
+                  placeholder="adiniz@alanadiniz.com"
                 />
                 <p className="text-xs text-slate-500 mt-1">
                   Sıfırlama bağlantısını e-posta adresinize göndereceğiz.

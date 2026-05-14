@@ -197,7 +197,7 @@ function maybeShowBrowserNotification(title: string, body: string): void {
     new Notification(title, {
       body,
       icon: "/favicon.ico",
-      tag: "educoach",
+      tag: "akademi-pro",
     });
   } catch {
     // sessizce yoksay
@@ -328,7 +328,7 @@ export async function sendNotification(
   return results;
 }
 
-/* -------------------- Outbox (sağlayıcı yapılandırılmadığında simülasyon) -------------------- */
+/* -------------------- Outbox (sağlayıcı yapılandırılmadığında kayıt kuyruğu) -------------------- */
 
 export type OutboxEntry = {
   id: string;

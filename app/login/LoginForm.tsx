@@ -1,38 +1,28 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { BookOpen, Presentation, Users, Loader2, Eye, EyeOff, AlertCircle } from "lucide-react";
-import { mockLogin, mockUsers } from "@/lib/mockDb";
-import { SESSION_KEY } from "@/lib/profile";
-import { isSupabaseClientConfigured } from "@/lib/authEnv";
-import { loginWithEmailAndPassword, sessionFromMockUser } from "@/lib/authAccounts";
+import { BookOpen, Loader2, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { loginWithEmailAndPassword, requestEmailLoginLink } from "@/lib/authAccounts";
 
-export function LoginForm({ roleHint }: { roleHint: string | null }) {
+export function LoginForm() {
   const router = useRouter();
 
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
   const [showPass, setShowPass] = useState(false);
-
-  useEffect(() => {
-    if (!roleHint) return;
-    const seedUser = mockUsers.find((u) => u.role === roleHint);
-    if (seedUser) setIdentifier((prev) => prev || seedUser.email);
-  }, [roleHint]);
-
-  const liveAuth = isSupabaseClientConfigured();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setInfo("");
     try {
-      const session = await loginWithEmailAndPassword(identifier, password);
-      localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+      await loginWithEmailAndPassword(identifier, password);
       router.push("/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Giriş başarısız.");
@@ -41,29 +31,15 @@ export function LoginForm({ roleHint }: { roleHint: string | null }) {
     }
   };
 
-  const handleDemoLogin = async (role: "teacher" | "parent" | "student") => {
-    const user = mockUsers.find((u) => u.role === role);
-    if (!user) return;
-    setIdentifier(user.email);
-    setPassword(user.password);
+  const handleEmailLink = async () => {
     setLoading(true);
     setError("");
+    setInfo("");
     try {
-      if (liveAuth) {
-        const session = await loginWithEmailAndPassword(user.email, user.password);
-        localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-      } else {
-        const loggedIn = await mockLogin(user.email, user.password);
-        localStorage.setItem(SESSION_KEY, JSON.stringify(sessionFromMockUser(loggedIn)));
-      }
-      router.push("/dashboard");
+      const result = await requestEmailLoginLink(identifier);
+      setInfo(result.message);
     } catch (err) {
-      const base = err instanceof Error ? err.message : "Giriş başarısız.";
-      setError(
-        liveAuth
-          ? `${base} Demo hesapları Supabase’te yoksa proje kökünde: npm run seed:demo`
-          : base
-      );
+      setError(err instanceof Error ? err.message : "Giriş bağlantısı gönderilemedi.");
     } finally {
       setLoading(false);
     }
@@ -84,59 +60,20 @@ export function LoginForm({ roleHint }: { roleHint: string | null }) {
         </div>
 
         <div className="card">
-          <div className="mb-6">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 text-center">
-              Hızlı demo girişi
-            </p>
-            {liveAuth && (
-              <p className="text-[11px] text-slate-500 text-center mb-3 leading-snug">
-                Supabase kullanıyorsunuz: demo için önce terminalde{" "}
-                <code className="bg-slate-100 px-1 rounded">npm run seed:demo</code> çalıştırın
-                (tugba@demo.com, veli@demo.com, şifre password123).
-              </p>
-            )}
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => handleDemoLogin("teacher")}
-                disabled={loading}
-                className="flex flex-col items-center justify-center gap-1 py-3 px-2 bg-primary-50 text-primary-700 rounded-lg hover:bg-primary-100 transition-colors font-medium text-xs border border-primary-100 disabled:opacity-50"
-              >
-                <Presentation className="w-5 h-5" /> Öğretmen
-              </button>
-              <button
-                type="button"
-                onClick={() => handleDemoLogin("parent")}
-                disabled={loading}
-                className="flex flex-col items-center justify-center gap-1 py-3 px-2 bg-secondary-50 text-secondary-700 rounded-lg hover:bg-secondary-100 transition-colors font-medium text-xs border border-secondary-100 disabled:opacity-50"
-              >
-                <Users className="w-5 h-5" /> Veli
-              </button>
-              <button
-                type="button"
-                onClick={() => handleDemoLogin("student")}
-                disabled={loading}
-                className="flex flex-col items-center justify-center gap-1 py-3 px-2 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors font-medium text-xs border border-purple-100 disabled:opacity-50"
-              >
-                <BookOpen className="w-5 h-5" /> Öğrenci
-              </button>
-            </div>
-            <div className="flex items-center my-6">
-              <div className="flex-1 border-t border-slate-200"></div>
-              <span className="px-3 text-sm text-slate-400">VEYA</span>
-              <div className="flex-1 border-t border-slate-200"></div>
-            </div>
-          </div>
-
           <form onSubmit={handleLogin} className="space-y-4">
             {error && (
               <div className="p-3 bg-red-50 text-red-700 border border-red-200 rounded-lg text-sm font-medium flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" /> {error}
               </div>
             )}
+            {info && (
+              <div className="p-3 bg-green-50 text-green-700 border border-green-200 rounded-lg text-sm font-medium">
+                {info}
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                {liveAuth ? "E-posta adresi" : "E-posta adresi veya profil kodu"}
+                E-posta adresi
               </label>
               <input
                 type="text"
@@ -145,7 +82,7 @@ export function LoginForm({ roleHint }: { roleHint: string | null }) {
                 required
                 autoComplete="email"
                 className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all"
-                placeholder={liveAuth ? "ornek@email.com" : "ornek@email.com veya TCH-9024"}
+                placeholder="adiniz@alanadiniz.com"
               />
             </div>
             <div>
@@ -181,6 +118,14 @@ export function LoginForm({ roleHint }: { roleHint: string | null }) {
               className="btn btn-primary w-full mt-2 disabled:opacity-70"
             >
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Giriş Yap"}
+            </button>
+            <button
+              type="button"
+              onClick={handleEmailLink}
+              disabled={loading || !identifier.trim()}
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 disabled:opacity-60 transition-colors"
+            >
+              E-posta ile güvenli giriş bağlantısı gönder
             </button>
           </form>
 

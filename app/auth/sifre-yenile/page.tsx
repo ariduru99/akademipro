@@ -74,8 +74,8 @@ export default function ResetPasswordPage() {
       <div className="min-h-screen bg-gradient-to-br from-primary-50 to-slate-100 flex items-center justify-center p-4">
         <div className="card max-w-md w-full text-center space-y-4">
           <p className="text-slate-600 text-sm">
-            Şifre sıfırlama yalnızca Supabase yapılandırıldığında kullanılabilir. Şu an demo modundasınız;
-            şifre sıfırlama için &quot;Şifremi unuttum&quot; sayfasındaki demo akışını kullanın.
+            Şifre sıfırlama yalnızca Supabase kimlik altyapısı yapılandırıldığında kullanılabilir.
+            Ortam değişkenlerini tanımladıktan sonra yeniden deneyin.
           </p>
           <Link href="/login" className="btn btn-primary inline-block">
             Girişe dön
@@ -124,7 +124,7 @@ export default function ResetPasswordPage() {
             className="inline-flex items-center gap-2 text-2xl font-bold text-primary-600 mb-2 hover:scale-105 transition-transform"
           >
             <BookOpen className="w-8 h-8" />
-            EduCoach
+            Akademi Pro
           </Link>
           <p className="text-slate-500 text-sm">Yeni şifrenizi belirleyin</p>
         </div>

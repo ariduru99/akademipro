@@ -14,6 +14,7 @@ import {
   Building2,
 } from "lucide-react";
 import { getPaymentInfo, useProfile, PROFILE_UPDATED_EVENT, type PaymentInfo } from "@/lib/profile";
+import { readUserState, writeUserState } from "@/lib/appState";
 
 type PaymentStatus = "pending" | "paid" | "confirmed";
 
@@ -28,42 +29,21 @@ type PaymentRequest = {
 };
 
 const STORAGE_KEY = "payment_requests";
+const STUDENTS_STORAGE_KEY = "students_data";
 
-const initialRequests: PaymentRequest[] = [
-  {
-    id: 1,
-    student: "Ali Yılmaz",
-    parent: "Ahmet Bey",
-    desc: "Mayıs Ayı Matematik Dersleri (8 Seans)",
-    amount: 4800,
-    date: "1 Mayıs 2026",
-    status: "pending",
-  },
-  {
-    id: 2,
-    student: "Zeynep Kaya",
-    parent: "Ayşe Hanım",
-    desc: "İngilizce A2 - 4 Ders",
-    amount: 1800,
-    date: "28 Nisan 2026",
-    status: "paid",
-  },
-  {
-    id: 3,
-    student: "Elif Çelik",
-    parent: "Fatma Hanım",
-    desc: "Nisan Ayı Fen Bilimleri",
-    amount: 2400,
-    date: "15 Nisan 2026",
-    status: "confirmed",
-  },
-];
+type StudentOption = {
+  name: string;
+  parent: string;
+};
+
+const initialRequests: PaymentRequest[] = [];
 
 export default function PaymentsPage() {
   const { role: userRole, fullName } = useProfile();
   const [requests, setRequests] = useState<PaymentRequest[]>(initialRequests);
   const [hydrated, setHydrated] = useState(false);
   const [paymentInfo, setPaymentInfo] = useState<PaymentInfo>({ iban: "", bankName: "", accountHolder: "" });
+  const [studentOptions, setStudentOptions] = useState<StudentOption[]>([]);
 
   const [isNewRequestOpen, setIsNewRequestOpen] = useState(false);
   const [newReq, setNewReq] = useState({ student: "", desc: "", amount: "" });
@@ -75,25 +55,43 @@ export default function PaymentsPage() {
   };
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) setRequests(JSON.parse(saved));
-    } catch (e) {
+    let cancelled = false;
+    Promise.all([
+      readUserState<PaymentRequest[]>(STORAGE_KEY, initialRequests),
+      readUserState<Array<{ name?: string; parent?: string }>>(STUDENTS_STORAGE_KEY, []),
+    ])
+      .then(([saved, parsed]) => {
+        if (cancelled) return;
+        if (Array.isArray(saved)) setRequests(saved);
+        if (Array.isArray(parsed)) {
+          setStudentOptions(
+            parsed
+              .filter((s) => s.name)
+              .map((s) => ({ name: String(s.name), parent: s.parent ? String(s.parent) : "Veli" }))
+          );
+        }
+      })
+      .catch((e) => {
       console.error("payment requests load", e);
-    }
-    setPaymentInfo(getPaymentInfo());
-    setHydrated(true);
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setPaymentInfo(getPaymentInfo());
+          setHydrated(true);
+        }
+      });
     const refresh = () => setPaymentInfo(getPaymentInfo());
     window.addEventListener(PROFILE_UPDATED_EVENT, refresh);
     window.addEventListener("storage", refresh);
     return () => {
       window.removeEventListener(PROFILE_UPDATED_EVENT, refresh);
       window.removeEventListener("storage", refresh);
+      cancelled = true;
     };
   }, []);
 
   useEffect(() => {
-    if (hydrated) localStorage.setItem(STORAGE_KEY, JSON.stringify(requests));
+    if (hydrated) void writeUserState(STORAGE_KEY, requests).catch((e) => console.error("payment requests save", e));
   }, [requests, hydrated]);
 
   const accountHolder = paymentInfo.accountHolder || fullName || "Hesap sahibi";
@@ -106,11 +104,12 @@ export default function PaymentsPage() {
       return;
     }
     if (newReq.student && newReq.amount) {
+      const selectedStudent = studentOptions.find((s) => s.name === newReq.student);
       setRequests([
         {
           id: Date.now(),
           student: newReq.student,
-          parent: newReq.student === "Ali Yılmaz" ? "Ahmet Bey" : "Veli",
+          parent: selectedStudent?.parent || "Veli",
           desc: newReq.desc || "Ders ücreti",
           amount: parseInt(newReq.amount, 10),
           date: new Date().toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" }),
@@ -403,11 +402,17 @@ export default function PaymentsPage() {
                   className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-500 bg-white"
                 >
                   <option value="">Seçin...</option>
-                  <option>Ali Yılmaz</option>
-                  <option>Zeynep Kaya</option>
-                  <option>Elif Çelik</option>
-                  <option>Can Özkan</option>
+                  {studentOptions.map((student) => (
+                    <option key={student.name} value={student.name}>
+                      {student.name} · {student.parent}
+                    </option>
+                  ))}
                 </select>
+                {studentOptions.length === 0 && (
+                  <p className="text-xs text-amber-700 mt-2">
+                    Önce Öğrenci & Veli ekranından öğrenci ekleyin.
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Açıklama</label>

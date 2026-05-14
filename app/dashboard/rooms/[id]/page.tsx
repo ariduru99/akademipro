@@ -3,17 +3,31 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Mic, MicOff, Video as VideoIcon, VideoOff, MonitorUp, PhoneOff, MessageSquare, Users, Settings, PenTool, X, Send } from 'lucide-react';
 import Link from 'next/link';
+import { useProfile } from '@/lib/profile';
+
+type RoomChatMessage = {
+  id: number;
+  name: string;
+  text: string;
+  color: string;
+};
+
+type RoomParticipant = {
+  id: number;
+  name: string;
+  role: string;
+  me?: boolean;
+  mic: boolean;
+};
 
 export default function RoomPage({ params }: { params: { id: string } }) {
+  const { fullName, initials } = useProfile();
   const [micOn, setMicOn] = useState(false);
   const [videoOn, setVideoOn] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [sidebarTab, setSidebarTab] = useState<'chat' | 'participants' | 'problems'>('chat');
   const [chatMsg, setChatMsg] = useState('');
-  const [chatMessages, setChatMessages] = useState([
-    { id: 1, name: 'Ali Yılmaz', text: 'Hocam sesiniz az geliyor sanırım.', color: 'primary' },
-    { id: 2, name: 'Zeynep Kaya', text: 'Ekranda 2. soruyu göremiyorum.', color: 'orange' },
-  ]);
+  const [chatMessages, setChatMessages] = useState<RoomChatMessage[]>([]);
 
   // Real media refs
   const localVideoRef = useRef<HTMLVideoElement>(null);
@@ -21,11 +35,8 @@ export default function RoomPage({ params }: { params: { id: string } }) {
   const localStreamRef = useRef<MediaStream | null>(null);
   const screenStreamRef = useRef<MediaStream | null>(null);
 
-  const [participants, setParticipants] = useState([
-    { id: 1, name: 'Tuğba Öğretmen', role: 'Öğretmen', me: true, mic: true },
-    { id: 2, name: 'Ali Yılmaz', role: 'Öğrenci', mic: true },
-    { id: 3, name: 'Zeynep Kaya', role: 'Öğrenci', mic: false },
-    { id: 4, name: 'Elif Çelik', role: 'Öğrenci', mic: false },
+  const [participants, setParticipants] = useState<RoomParticipant[]>([
+    { id: 1, name: 'Siz', role: 'Öğretmen', me: true, mic: false },
   ]);
 
   const [mediaError, setMediaError] = useState('');
@@ -33,6 +44,16 @@ export default function RoomPage({ params }: { params: { id: string } }) {
   const removeParticipant = (id: number) => {
     setParticipants(participants.filter(p => p.id !== id));
   };
+
+  useEffect(() => {
+    setParticipants((current) =>
+      current.map((p) =>
+        p.me
+          ? { ...p, name: fullName || 'Siz', mic: micOn }
+          : p
+      )
+    );
+  }, [fullName, micOn]);
 
   // --- REAL CAMERA ---
   const toggleCamera = useCallback(async () => {
@@ -206,13 +227,13 @@ export default function RoomPage({ params }: { params: { id: string } }) {
             ) : (
               <div className="flex flex-col items-center gap-4">
                 <div className="w-24 h-24 rounded-full bg-primary-600 flex items-center justify-center text-4xl text-white font-bold">
-                  T
+                  {initials.charAt(0) || 'S'}
                 </div>
                 <p className="text-slate-500 text-sm">Kameranız kapalı</p>
               </div>
             )}
             <div className="absolute bottom-4 left-4 bg-black/50 backdrop-blur-md text-white px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2">
-              Tuğba Öğretmen (Siz)
+              {fullName || 'Siz'}
               {!micOn && <MicOff className="w-4 h-4 text-red-400" />}
             </div>
             {isScreenSharing && (
@@ -273,7 +294,7 @@ export default function RoomPage({ params }: { params: { id: string } }) {
             <button onClick={() => setSidebarTab('participants')} className={`flex-1 py-3 border-b-2 transition-colors ${sidebarTab === 'participants' ? 'border-primary-500 text-white' : 'border-transparent hover:text-slate-200'}`}>Katılımcılar</button>
             <button onClick={() => setSidebarTab('problems')} className={`flex-1 py-3 border-b-2 transition-colors flex justify-center gap-2 ${sidebarTab === 'problems' ? 'border-primary-500 text-white' : 'border-transparent hover:text-slate-200'}`}>
               Soru Çöz
-              <span className="w-4 h-4 bg-red-500 text-white rounded-full text-[10px] flex items-center justify-center">2</span>
+              <span className="w-4 h-4 bg-slate-600 text-white rounded-full text-[10px] flex items-center justify-center">0</span>
             </button>
           </div>
 
@@ -303,7 +324,7 @@ export default function RoomPage({ params }: { params: { id: string } }) {
               <div className="space-y-4">
                 <div className="flex gap-2">
                   <input type="text" placeholder="Öğrenci ara..." className="flex-1 bg-slate-700 border border-slate-600 px-3 py-1.5 rounded-lg text-sm text-white focus:outline-none" />
-                  <button onClick={() => setParticipants([...participants, { id: Date.now(), name: 'Yeni Öğrenci', role: 'Öğrenci', me: false, mic: false }])} className="px-3 py-1.5 bg-primary-600 text-white rounded-lg text-xs font-bold hover:bg-primary-700">Ekle</button>
+                  <button onClick={() => setParticipants([...participants, { id: Date.now(), name: 'Katılımcı', role: 'Öğrenci', me: false, mic: false }])} className="px-3 py-1.5 bg-primary-600 text-white rounded-lg text-xs font-bold hover:bg-primary-700">Ekle</button>
                 </div>
                 <div className="space-y-2">
                   {participants.map(p => (
@@ -330,35 +351,10 @@ export default function RoomPage({ params }: { params: { id: string } }) {
             )}
 
             {sidebarTab === 'problems' && (
-              <div className="space-y-4">
-                <div className="bg-slate-700/50 p-4 rounded-xl border border-slate-600">
-                  <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-bold text-white">Ali&apos;nin Çözümü</h4>
-                    <span className="text-xs bg-primary-500/20 text-primary-400 px-2 py-0.5 rounded">Yeni</span>
-                  </div>
-                  <div className="h-24 bg-slate-800 rounded-lg flex items-center justify-center text-slate-500 border border-slate-600 mb-3">
-                    [Fotoğraf]
-                  </div>
-                  <div className="flex gap-2">
-                    <button className="flex-1 py-1.5 bg-green-500/20 text-green-400 rounded hover:bg-green-500/30 text-xs font-bold transition-colors">Doğru</button>
-                    <button className="flex-1 py-1.5 bg-red-500/20 text-red-400 rounded hover:bg-red-500/30 text-xs font-bold transition-colors">Yanlış</button>
-                    <button className="py-1.5 px-3 bg-slate-600 text-white rounded hover:bg-slate-500 transition-colors"><PenTool className="w-4 h-4"/></button>
-                  </div>
-                </div>
-
-                <div className="bg-slate-700/50 p-4 rounded-xl border border-slate-600">
-                  <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-bold text-white">Zeynep&apos;in Çözümü</h4>
-                  </div>
-                  <div className="h-24 bg-slate-800 rounded-lg flex items-center justify-center text-slate-500 border border-slate-600 mb-3">
-                    [Fotoğraf]
-                  </div>
-                  <div className="flex gap-2">
-                    <button className="flex-1 py-1.5 bg-green-500/20 text-green-400 rounded hover:bg-green-500/30 text-xs font-bold transition-colors">Doğru</button>
-                    <button className="flex-1 py-1.5 bg-red-500/20 text-red-400 rounded hover:bg-red-500/30 text-xs font-bold transition-colors">Yanlış</button>
-                    <button className="py-1.5 px-3 bg-slate-600 text-white rounded hover:bg-slate-500 transition-colors"><PenTool className="w-4 h-4"/></button>
-                  </div>
-                </div>
+              <div className="flex flex-col items-center justify-center text-center text-slate-500 py-12 gap-3">
+                <PenTool className="w-8 h-8 opacity-50" />
+                <p>Henüz çözüm bekleyen soru yok.</p>
+                <p className="text-xs">Öğrenciler çözüm yüklediğinde burada listelenecek.</p>
               </div>
             )}
           </div>

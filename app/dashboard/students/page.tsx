@@ -15,6 +15,10 @@ import {
   PenTool,
   PauseCircle,
   GraduationCap,
+  TrendingUp,
+  AlertTriangle,
+  ClipboardCheck,
+  Target,
 } from "lucide-react";
 
 type Student = {
@@ -28,6 +32,16 @@ type Student = {
   status: "active" | "inactive";
 };
 
+type StudentInsight = {
+  attendanceRate: number;
+  homeworkRate: number;
+  nextLesson: string;
+  risk: "low" | "medium" | "high";
+  action: string;
+  summary: string;
+  trend: string;
+};
+
 const STORAGE_KEY = "students_data";
 
 const defaultStudents: Student[] = [
@@ -36,6 +50,96 @@ const defaultStudents: Student[] = [
   { id: 3, name: "Can Özkan", parent: "Mehmet Özkan", phone: "+905554567890", email: "can@example.com", grade: "7. Sınıf", courses: ["Matematik"], status: "inactive" },
   { id: 4, name: "Elif Çelik", parent: "Fatma Çelik", phone: "+905552223344", email: "elif@example.com", grade: "8. Sınıf", courses: ["Fen", "İngilizce"], status: "active" },
 ];
+
+const namedInsights: Record<string, StudentInsight> = {
+  "Ali Yılmaz": {
+    attendanceRate: 92,
+    homeworkRate: 78,
+    nextLesson: "Yarın 19:00",
+    risk: "medium",
+    action: "Üslü sayılar ödevini derste birlikte kontrol et.",
+    summary: "Derslere düzenli katılıyor, ödev teslimlerinde kısa takip faydalı olur.",
+    trend: "+8 puan",
+  },
+  "Zeynep Kaya": {
+    attendanceRate: 96,
+    homeworkRate: 88,
+    nextLesson: "Çarşamba 14:00",
+    risk: "low",
+    action: "Bir sonraki ders için seviye atlama mini testi hazırla.",
+    summary: "Katılım ve ödev performansı güçlü; yeni kazanımlara hazır görünüyor.",
+    trend: "+12 puan",
+  },
+  "Can Özkan": {
+    attendanceRate: 61,
+    homeworkRate: 42,
+    nextLesson: "Planlanmadı",
+    risk: "high",
+    action: "Veliyle yeniden başlangıç görüşmesi planla.",
+    summary: "Pasif durumda; tekrar katılım için veli/öğrenci iletişimi öncelikli.",
+    trend: "-6 puan",
+  },
+  "Elif Çelik": {
+    attendanceRate: 84,
+    homeworkRate: 91,
+    nextLesson: "Perşembe 16:00",
+    risk: "low",
+    action: "Fen denemesi sonucuna göre kısa tekrar paketi gönder.",
+    summary: "Ödev disiplini yüksek, konu tekrarlarıyla performansını koruyor.",
+    trend: "+5 puan",
+  },
+};
+
+const riskMeta: Record<StudentInsight["risk"], { label: string; className: string; dotClassName: string }> = {
+  low: {
+    label: "İyi gidiyor",
+    className: "bg-green-50 text-green-700 border-green-200",
+    dotClassName: "bg-green-500",
+  },
+  medium: {
+    label: "Takip et",
+    className: "bg-amber-50 text-amber-700 border-amber-200",
+    dotClassName: "bg-amber-500",
+  },
+  high: {
+    label: "Öncelikli",
+    className: "bg-red-50 text-red-700 border-red-200",
+    dotClassName: "bg-red-500",
+  },
+};
+
+function getStudentInsight(student: Student): StudentInsight {
+  const named = namedInsights[student.name];
+  if (named) return named;
+
+  if (student.status === "inactive") {
+    return {
+      attendanceRate: 58,
+      homeworkRate: 45,
+      nextLesson: "Planlanmadı",
+      risk: "high",
+      action: "Pasif öğrenciyi yeniden programa almak için veliyle iletişime geç.",
+      summary: "Uzun süredir düzenli takipte değil; önce iletişim ve hedef güncellemesi gerekli.",
+      trend: "-4 puan",
+    };
+  }
+
+  const courseFactor = Math.min(student.courses.length, 4) * 4;
+  const idFactor = student.id % 7;
+  const attendanceRate = Math.min(98, 78 + courseFactor + idFactor);
+  const homeworkRate = Math.min(96, 70 + courseFactor + (idFactor * 2));
+  const risk: StudentInsight["risk"] = homeworkRate < 72 ? "medium" : "low";
+
+  return {
+    attendanceRate,
+    homeworkRate,
+    nextLesson: "Bu hafta",
+    risk,
+    action: "Haftalık hedefleri netleştirip kısa ödev kontrolü yap.",
+    summary: "Yeni eklenen öğrenci için ilk takip metrikleri oluşturuldu.",
+    trend: "+3 puan",
+  };
+}
 
 export default function StudentsPage() {
   const [students, setStudents] = useState<Student[]>(defaultStudents);
@@ -149,6 +253,25 @@ export default function StudentsPage() {
     });
   }, [students, filterStatus, search]);
 
+  const studentStats = useMemo(() => {
+    const insights = students.map(getStudentInsight);
+    const activeStudents = students.filter((s) => s.status === "active").length;
+    const attentionCount = insights.filter((i) => i.risk !== "low").length;
+    const averageHomework = insights.length
+      ? Math.round(insights.reduce((sum, insight) => sum + insight.homeworkRate, 0) / insights.length)
+      : 0;
+    const courseCount = new Set(students.flatMap((s) => s.courses)).size;
+
+    return {
+      activeStudents,
+      attentionCount,
+      averageHomework,
+      courseCount,
+    };
+  }, [students]);
+
+  const detailInsight = detailStudent ? getStudentInsight(detailStudent) : null;
+
   return (
     <div className="space-y-6 relative pb-32">
       {toast && (
@@ -181,6 +304,37 @@ export default function StudentsPage() {
         </div>
       </div>
 
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <InsightCard
+          icon={<GraduationCap className="w-5 h-5" />}
+          label="Aktif Öğrenci"
+          value={`${studentStats.activeStudents}/${students.length}`}
+          hint="Takipteki toplam kayıt"
+          colorClass="bg-primary-50 text-primary-600"
+        />
+        <InsightCard
+          icon={<ClipboardCheck className="w-5 h-5" />}
+          label="Ortalama Ödev"
+          value={`%${studentStats.averageHomework}`}
+          hint="Demo takip skorlarının ortalaması"
+          colorClass="bg-green-50 text-green-600"
+        />
+        <InsightCard
+          icon={<AlertTriangle className="w-5 h-5" />}
+          label="Yakın Takip"
+          value={studentStats.attentionCount.toString()}
+          hint="Aksiyon bekleyen öğrenci"
+          colorClass="bg-amber-50 text-amber-600"
+        />
+        <InsightCard
+          icon={<Target className="w-5 h-5" />}
+          label="Aktif Kurs"
+          value={studentStats.courseCount.toString()}
+          hint="Listede tanımlı farklı ders"
+          colorClass="bg-purple-50 text-purple-600"
+        />
+      </div>
+
       <div className="flex flex-col sm:flex-row gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
         <div className="relative flex-1">
           <Search className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -207,7 +361,7 @@ export default function StudentsPage() {
 
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-visible">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-slate-600 min-w-[640px]">
+          <table className="w-full text-left text-sm text-slate-600 min-w-[860px]">
             <thead className="bg-slate-50/50 text-slate-500 font-semibold text-xs uppercase tracking-wider border-b border-slate-200">
               <tr>
                 <th className="px-6 py-4">Öğrenci</th>
@@ -215,127 +369,143 @@ export default function StudentsPage() {
                 <th className="px-6 py-4">İletişim</th>
                 <th className="px-6 py-4">Sınıf & Kurslar</th>
                 <th className="px-6 py-4">Durum</th>
+                <th className="px-6 py-4">Takip</th>
                 <th className="px-6 py-4 text-right">İşlem</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filteredStudents.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-6 py-10 text-center text-slate-500 text-sm">
+                  <td colSpan={7} className="px-6 py-10 text-center text-slate-500 text-sm">
                     Sonuç bulunamadı.
                   </td>
                 </tr>
               )}
-              {filteredStudents.map((student) => (
-                <tr key={student.id} className="hover:bg-slate-50/50 transition-colors group relative">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center font-bold">
-                        {student.name.charAt(0)}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setDetailStudent(student)}
-                        className="font-bold text-slate-800 hover:text-primary-600 text-left"
-                      >
-                        {student.name}
-                      </button>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 font-medium">{student.parent}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2 text-slate-500">
-                      <a
-                        href={`tel:${student.phone}`}
-                        title={student.phone}
-                        className="p-1.5 hover:bg-slate-200 rounded-md transition-colors"
-                        aria-label={`${student.name} telefonu ara`}
-                      >
-                        <Phone className="w-4 h-4" />
-                      </a>
-                      {student.email && (
-                        <a
-                          href={`mailto:${student.email}`}
-                          title={student.email}
-                          className="p-1.5 hover:bg-slate-200 rounded-md transition-colors"
-                          aria-label={`${student.name} mail at`}
-                        >
-                          <Mail className="w-4 h-4" />
-                        </a>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <p className="font-medium text-slate-800 mb-1">{student.grade}</p>
-                    <div className="flex gap-1 flex-wrap">
-                      {student.courses.map((course) => (
-                        <span
-                          key={course}
-                          className="px-2 py-0.5 bg-slate-100 border border-slate-200 rounded text-xs text-slate-600 font-medium"
-                        >
-                          {course}
-                        </span>
-                      ))}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    {student.status === "active" ? (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700">
-                        Aktif
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-500">
-                        Pasif
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setDetailStudent(student)}
-                        className="p-2 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-                        title="Detay"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                      </button>
-                      <div className="relative">
+              {filteredStudents.map((student) => {
+                const insight = getStudentInsight(student);
+                const meta = riskMeta[insight.risk];
+
+                return (
+                  <tr key={student.id} className="hover:bg-slate-50/50 transition-colors group relative">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center font-bold">
+                          {student.name.charAt(0)}
+                        </div>
                         <button
-                          onClick={() => setActiveMenuId(activeMenuId === student.id ? null : student.id)}
-                          className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                          title="Daha fazla"
+                          type="button"
+                          onClick={() => setDetailStudent(student)}
+                          className="font-bold text-slate-800 hover:text-primary-600 text-left"
                         >
-                          <MoreHorizontal className="w-4 h-4" />
+                          {student.name}
                         </button>
-                        {activeMenuId === student.id && (
-                          <div className="absolute right-0 top-10 mt-1 w-48 bg-white border border-slate-200 rounded-xl shadow-lg z-[100] py-1 text-left animate-in fade-in zoom-in-95">
-                            <button
-                              onClick={() => handleAction(student.id, "edit")}
-                              className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                            >
-                              <PenTool className="w-4 h-4 text-slate-400" /> Profili Düzenle
-                            </button>
-                            <button
-                              onClick={() => handleAction(student.id, "status")}
-                              className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                            >
-                              <PauseCircle className="w-4 h-4 text-slate-400" />
-                              {student.status === "active" ? "Pasife Al" : "Aktifleştir"}
-                            </button>
-                            <div className="h-px bg-slate-100 my-1" />
-                            <button
-                              onClick={() => handleAction(student.id, "delete")}
-                              className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                            >
-                              <Trash2 className="w-4 h-4 text-red-400" /> Öğrenciyi Sil
-                            </button>
-                          </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 font-medium">{student.parent}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2 text-slate-500">
+                        <a
+                          href={`tel:${student.phone}`}
+                          title={student.phone}
+                          className="p-1.5 hover:bg-slate-200 rounded-md transition-colors"
+                          aria-label={`${student.name} telefonu ara`}
+                        >
+                          <Phone className="w-4 h-4" />
+                        </a>
+                        {student.email && (
+                          <a
+                            href={`mailto:${student.email}`}
+                            title={student.email}
+                            className="p-1.5 hover:bg-slate-200 rounded-md transition-colors"
+                            aria-label={`${student.name} mail at`}
+                          >
+                            <Mail className="w-4 h-4" />
+                          </a>
                         )}
                       </div>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="px-6 py-4">
+                      <p className="font-medium text-slate-800 mb-1">{student.grade}</p>
+                      <div className="flex gap-1 flex-wrap">
+                        {student.courses.map((course) => (
+                          <span
+                            key={course}
+                            className="px-2 py-0.5 bg-slate-100 border border-slate-200 rounded text-xs text-slate-600 font-medium"
+                          >
+                            {course}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      {student.status === "active" ? (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700">
+                          Aktif
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-500">
+                          Pasif
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 min-w-[190px]">
+                      <div className={`inline-flex items-center gap-1.5 border px-2 py-1 rounded-full text-xs font-bold ${meta.className}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${meta.dotClassName}`} />
+                        {meta.label}
+                      </div>
+                      <div className="mt-2 space-y-1.5">
+                        <ProgressLine label="Ödev" value={insight.homeworkRate} />
+                        <ProgressLine label="Katılım" value={insight.attendanceRate} />
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setDetailStudent(student)}
+                          className="p-2 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                          title="Detay"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                        </button>
+                        <div className="relative">
+                          <button
+                            onClick={() => setActiveMenuId(activeMenuId === student.id ? null : student.id)}
+                            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                            title="Daha fazla"
+                          >
+                            <MoreHorizontal className="w-4 h-4" />
+                          </button>
+                          {activeMenuId === student.id && (
+                            <div className="absolute right-0 top-10 mt-1 w-48 bg-white border border-slate-200 rounded-xl shadow-lg z-[100] py-1 text-left animate-in fade-in zoom-in-95">
+                              <button
+                                onClick={() => handleAction(student.id, "edit")}
+                                className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                              >
+                                <PenTool className="w-4 h-4 text-slate-400" /> Profili Düzenle
+                              </button>
+                              <button
+                                onClick={() => handleAction(student.id, "status")}
+                                className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                              >
+                                <PauseCircle className="w-4 h-4 text-slate-400" />
+                                {student.status === "active" ? "Pasife Al" : "Aktifleştir"}
+                              </button>
+                              <div className="h-px bg-slate-100 my-1" />
+                              <button
+                                onClick={() => handleAction(student.id, "delete")}
+                                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                              >
+                                <Trash2 className="w-4 h-4 text-red-400" /> Öğrenciyi Sil
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -553,6 +723,39 @@ export default function StudentsPage() {
                 ))}
               </div>
             </div>
+            {detailInsight && (
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 space-y-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">
+                      Gelişim özeti
+                    </p>
+                    <p className="text-slate-700 leading-relaxed">{detailInsight.summary}</p>
+                  </div>
+                  <span
+                    className={`shrink-0 inline-flex items-center gap-1.5 border px-2 py-1 rounded-full text-xs font-bold ${riskMeta[detailInsight.risk].className}`}
+                  >
+                    <span className={`w-1.5 h-1.5 rounded-full ${riskMeta[detailInsight.risk].dotClassName}`} />
+                    {riskMeta[detailInsight.risk].label}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <MetricBox label="Ödev tamamlama" value={`%${detailInsight.homeworkRate}`} />
+                  <MetricBox label="Katılım" value={`%${detailInsight.attendanceRate}`} />
+                  <MetricBox label="Sıradaki ders" value={detailInsight.nextLesson} />
+                  <MetricBox label="Trend" value={detailInsight.trend} />
+                </div>
+                <div className="rounded-xl border border-primary-100 bg-white p-3 flex gap-3">
+                  <TrendingUp className="w-5 h-5 text-primary-600 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wider text-primary-600 mb-1">
+                      Önerilen aksiyon
+                    </p>
+                    <p className="text-sm text-slate-700">{detailInsight.action}</p>
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="flex gap-2 pt-2 flex-wrap">
               <button
                 type="button"
@@ -579,6 +782,56 @@ export default function StudentsPage() {
   );
 }
 
+function InsightCard({
+  icon,
+  label,
+  value,
+  hint,
+  colorClass,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  hint: string;
+  colorClass: string;
+}) {
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex items-start gap-4">
+      <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${colorClass}`}>
+        {icon}
+      </div>
+      <div>
+        <p className="text-xs font-bold uppercase tracking-wider text-slate-400">{label}</p>
+        <p className="text-2xl font-extrabold text-slate-800 mt-1">{value}</p>
+        <p className="text-xs text-slate-500 mt-1">{hint}</p>
+      </div>
+    </div>
+  );
+}
+
+function ProgressLine({ label, value }: { label: string; value: number }) {
+  return (
+    <div>
+      <div className="flex justify-between text-[10px] font-bold text-slate-400 mb-1">
+        <span>{label}</span>
+        <span>%{value}</span>
+      </div>
+      <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+        <div className="h-full bg-primary-500 rounded-full" style={{ width: `${Math.max(0, Math.min(value, 100))}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function MetricBox({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="bg-white rounded-xl border border-slate-200 p-3">
+      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">{label}</p>
+      <p className="font-bold text-slate-800">{value}</p>
+    </div>
+  );
+}
+
 function Modal({
   title,
   onClose,
@@ -592,7 +845,7 @@ function Modal({
 }) {
   return (
     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95">
         <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
           <h3 className="font-bold text-slate-800 flex items-center gap-2">
             {icon}

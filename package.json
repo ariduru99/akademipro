@@ -8,11 +8,12 @@
     "dev:turbo": "next dev --turbo",
     "dev:clean": "npm run clean && next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "node .next/standalone/server.js",
     "preview": "npm run build && npm run start",
-    "dev:stable": "npm run clean && npm run build && npm run start",
+    "dev:stable": "npm run clean && npm run build && npm run start:next",
     "lint": "next lint",
-    "seed:demo": "node scripts/seed-supabase-demo-users.cjs"
+    "seed:demo": "node scripts/seed-supabase-demo-users.cjs",
+    "start:next": "next start"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.43.4",

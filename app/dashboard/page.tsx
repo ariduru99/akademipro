@@ -537,7 +537,7 @@ export default function Dashboard() {
                               </p>
                             </div>
                           </div>
-                          <span className="text-[10px] text-slate-400 shrink-0 ml-2">Demo dosya</span>
+                          <span className="text-[10px] text-slate-400 shrink-0 ml-2">{file.size}</span>
                         </div>
                       ))}
                     </div>

@@ -145,8 +145,8 @@ export default function Home() {
               <Link href="/register" className="bg-white text-primary-600 px-8 py-3 rounded-xl font-bold hover:bg-white/90 transition-colors shadow-lg">
                 Ücretsiz Kayıt Ol
               </Link>
-              <Link href="/login" className="border-2 border-white/30 text-white px-8 py-3 rounded-xl font-bold hover:bg-white/10 transition-colors">
-                Demo ile Dene
+              <Link href="/iletisim" className="border-2 border-white/30 text-white px-8 py-3 rounded-xl font-bold hover:bg-white/10 transition-colors">
+                Bize Ulaşın
               </Link>
             </div>
           </div>

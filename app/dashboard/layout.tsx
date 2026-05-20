@@ -30,7 +30,7 @@ import {
 } from "@/lib/notifications";
 import { useProfile } from "@/lib/profile";
 import { logoutClient } from "@/lib/authAccounts";
-import { seedDemoData } from "@/lib/dataSeeder";
+import { seedInitialData } from "@/lib/dataSeeder";
 
 
 const STATUS_KEY = "user_status";
@@ -89,7 +89,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   }, [hydrated, session, router]);
 
   useEffect(() => {
-    seedDemoData();
+    seedInitialData();
     refreshNotifications();
 
     const onChange = () => refreshNotifications();

@@ -24,56 +24,7 @@ export type MockUser = {
   };
 };
 
-export const seedUsers: MockUser[] = [
-  {
-    id: "usr-1",
-    role: "teacher",
-    profile_code: "TCH-9024",
-    full_name: "Tuğba Öğretmen",
-    email: "tugba@demo.com",
-    password: "password123",
-    city: "İstanbul",
-    hourly_rate: 600,
-    stats: {
-      today_classes: 3,
-      pending_homework: 12,
-      monthly_earnings: "18.500",
-      total_students: 24,
-    },
-  },
-  {
-    id: "usr-2",
-    role: "parent",
-    profile_code: "PAR-4123",
-    full_name: "Ahmet Yılmaz (Veli)",
-    email: "veli@demo.com",
-    password: "password123",
-    city: "Ankara",
-    linked_student_id: "usr-3",
-    stats: {
-      today_classes: 1,
-      pending_homework: 2,
-      monthly_earnings: "0",
-      total_students: 1,
-    },
-  },
-  {
-    id: "usr-3",
-    role: "student",
-    profile_code: "STD-8891",
-    full_name: "Can Yılmaz (Öğrenci)",
-    email: "ogrenci@demo.com",
-    password: "password123",
-    city: "Ankara",
-    linked_parent_id: "usr-2",
-    stats: {
-      today_classes: 2,
-      pending_homework: 5,
-      monthly_earnings: "0",
-      total_students: 0,
-    },
-  },
-];
+export const seedUsers: MockUser[] = [];
 
 /** Geriye dönük uyumluluk: bazı sayfalar `mockUsers` adıyla import ediyor. */
 export const mockUsers = seedUsers;
@@ -243,7 +194,7 @@ export async function mockResetPassword(identifier: string): Promise<{ ok: true;
   return {
     ok: true,
     message:
-      "Şifre sıfırlama bağlantısı gönderildi (demo). Gerçek e-posta sağlayıcı yapılandırıldığında bu mesaj kullanıcının posta kutusuna düşecek.",
+      "Şifre sıfırlama bağlantısı gönderildi. Gerçek e-posta sağlayıcı yapılandırıldığında bu mesaj kullanıcının posta kutusuna düşecek.",
   };
 }
 

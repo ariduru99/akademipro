@@ -74,8 +74,7 @@ export default function ResetPasswordPage() {
       <div className="min-h-screen bg-gradient-to-br from-primary-50 to-slate-100 flex items-center justify-center p-4">
         <div className="card max-w-md w-full text-center space-y-4">
           <p className="text-slate-600 text-sm">
-            Şifre sıfırlama yalnızca Supabase yapılandırıldığında kullanılabilir. Şu an demo modundasınız;
-            şifre sıfırlama için &quot;Şifremi unuttum&quot; sayfasındaki demo akışını kullanın.
+            Şifre sıfırlama hizmetimiz şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin veya destek için bizimle iletişime geçin.
           </p>
           <Link href="/login" className="btn btn-primary inline-block">
             Girişe dön

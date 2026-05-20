@@ -132,7 +132,7 @@ export default function SettingsPage() {
           r.status === "sent"
             ? "gönderildi"
             : r.status === "queued"
-              ? "kuyruğa alındı (demo)"
+              ? "kuyruğa alındı"
               : r.status === "skipped"
                 ? "atlandı"
                 : "hata";
@@ -461,9 +461,9 @@ export default function SettingsPage() {
                       <div className="flex items-start gap-3">
                         <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                         <div className="flex-1 text-sm">
-                          <p className="font-bold text-amber-900">Demo modu — gerçek e-posta gönderilmiyor</p>
+                          <p className="font-bold text-amber-900">E-posta gönderimi henüz etkin değil</p>
                           <p className="text-amber-800 mt-1">
-                            Test edilen e-postalar yalnızca aşağıdaki <strong>outbox</strong> tablosuna kaydediliyor.
+                            Test e-postaları aşağıdaki outbox tablosuna kaydediliyor. Gerçek gönderim için bir e-posta sağlayıcısı bağlamanız gerekir.
                           </p>
                           <details className="mt-2 text-xs text-amber-900">
                             <summary className="cursor-pointer font-bold">Gerçek gönderim nasıl açılır?</summary>
@@ -694,7 +694,7 @@ export default function SettingsPage() {
                               r.status === "sent"
                                 ? "Gönderildi"
                                 : r.status === "queued"
-                                  ? "Demo · Outbox'a yazıldı"
+                                  ? "Bekleniyor"
                                   : r.status === "skipped"
                                     ? "Atlandı"
                                     : "Hata";

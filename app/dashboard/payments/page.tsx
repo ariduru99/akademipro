@@ -29,35 +29,7 @@ type PaymentRequest = {
 
 const STORAGE_KEY = "payment_requests";
 
-const initialRequests: PaymentRequest[] = [
-  {
-    id: 1,
-    student: "Ali Yılmaz",
-    parent: "Ahmet Bey",
-    desc: "Mayıs Ayı Matematik Dersleri (8 Seans)",
-    amount: 4800,
-    date: "1 Mayıs 2026",
-    status: "pending",
-  },
-  {
-    id: 2,
-    student: "Zeynep Kaya",
-    parent: "Ayşe Hanım",
-    desc: "İngilizce A2 - 4 Ders",
-    amount: 1800,
-    date: "28 Nisan 2026",
-    status: "paid",
-  },
-  {
-    id: 3,
-    student: "Elif Çelik",
-    parent: "Fatma Hanım",
-    desc: "Nisan Ayı Fen Bilimleri",
-    amount: 2400,
-    date: "15 Nisan 2026",
-    status: "confirmed",
-  },
-];
+const initialRequests: PaymentRequest[] = [];
 
 export default function PaymentsPage() {
   const { role: userRole, fullName } = useProfile();

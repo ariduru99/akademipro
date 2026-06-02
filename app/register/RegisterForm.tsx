@@ -59,17 +59,24 @@ export function RegisterForm({ initialRoleQuery }: { initialRoleQuery: string | 
   const [tName, setTName] = useState("");
   const [tSurname, setTSurname] = useState("");
   const [tEmail, setTEmail] = useState("");
+  const [tPhone, setTPhone] = useState("");
+  const [tSubject, setTSubject] = useState("");
+  const [tLicenses, setTLicenses] = useState("");
+  const [tFile, setTFile] = useState<File | null>(null);
   const [tPass, setTPass] = useState("");
   const [tPass2, setTPass2] = useState("");
 
   const [sName, setSName] = useState("");
   const [sSurname, setSSurname] = useState("");
   const [sEmail, setSEmail] = useState("");
+  const [sPhone, setSPhone] = useState("");
+  const [sGrade, setSGrade] = useState("");
   const [sPass, setSPass] = useState("");
 
   const [pName, setPName] = useState("");
   const [pSurname, setPSurname] = useState("");
   const [pEmail, setPEmail] = useState("");
+  const [pPhone, setPPhone] = useState("");
   const [pPass, setPPass] = useState("");
 
   const goToLogin = () => router.push("/login");
@@ -90,7 +97,7 @@ export function RegisterForm({ initialRoleQuery }: { initialRoleQuery: string | 
       const fullName = `${tName.trim()} ${tSurname.trim()}`.trim();
       const email = tEmail.trim();
       if (isSupabaseClientConfigured()) {
-        await registerTeacherLive({ fullName, email, password: tPass });
+        await registerTeacherLive({ fullName, email, password: tPass, phone: tPhone.trim(), subject: tSubject.trim(), licenses: tLicenses.trim(), file: tFile });
       } else {
         await mockRegister({
           type: "teacher",
@@ -125,11 +132,14 @@ export function RegisterForm({ initialRoleQuery }: { initialRoleQuery: string | 
             fullName: studentFull,
             email: sEmail.trim(),
             password: sPass,
+            phone: sPhone.trim(),
+            grade: sGrade.trim(),
           },
           parent: {
             fullName: parentFull,
             email: pEmail.trim(),
             password: pPass,
+            phone: pPhone.trim(),
           },
         });
       } else {
@@ -230,14 +240,51 @@ export function RegisterForm({ initialRoleQuery }: { initialRoleQuery: string | 
                 <FormField label="Ad" required value={tName} onChange={setTName} autoComplete="given-name" />
                 <FormField label="Soyad" required value={tSurname} onChange={setTSurname} autoComplete="family-name" />
               </div>
-              <FormField
-                label="E-posta"
-                type="email"
-                required
-                value={tEmail}
-                onChange={setTEmail}
-                autoComplete="email"
-              />
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  label="E-posta"
+                  type="email"
+                  required
+                  value={tEmail}
+                  onChange={setTEmail}
+                  autoComplete="email"
+                />
+                <FormField
+                  label="Telefon"
+                  type="tel"
+                  required
+                  value={tPhone}
+                  onChange={setTPhone}
+                  autoComplete="tel"
+                />
+              </div>
+              <div className="grid grid-cols-1 gap-4">
+                <FormField
+                  label="Branş (Ne Öğretmenisiniz?)"
+                  required
+                  value={tSubject}
+                  onChange={setTSubject}
+                  placeholder="Örn: Matematik, Fizik, İngilizce"
+                />
+                <FormField
+                  label="Sertifika ve Lisanslar (Metin)"
+                  value={tLicenses}
+                  onChange={setTLicenses}
+                  placeholder="Örn: Formasyon, TEFL, Eğitim Bilimleri Mezunu"
+                />
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                    Lisans Belgesi / CV (Opsiyonel)
+                  </label>
+                  <input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={(e) => setTFile(e.target.files?.[0] || null)}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white file:mr-4 file:py-1.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1">PDF veya JPEG, maksimum 5MB.</p>
+                </div>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   label="Şifre"
@@ -319,6 +366,22 @@ export function RegisterForm({ initialRoleQuery }: { initialRoleQuery: string | 
                     autoComplete="new-password"
                   />
                 </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    label="Öğrenci Telefon"
+                    type="tel"
+                    value={sPhone}
+                    onChange={setSPhone}
+                    autoComplete="tel"
+                  />
+                  <FormField
+                    label="Öğrenci Sınıfı/Derecesi"
+                    required
+                    value={sGrade}
+                    onChange={setSGrade}
+                    placeholder="Örn: 8. Sınıf, Lise 3"
+                  />
+                </div>
               </div>
 
               <div className="bg-slate-50 p-5 rounded-xl border border-slate-200">
@@ -358,6 +421,17 @@ export function RegisterForm({ initialRoleQuery }: { initialRoleQuery: string | 
                     value={pPass}
                     onChange={setPPass}
                     autoComplete="new-password"
+                    ringClass="focus:ring-secondary-500"
+                  />
+                </div>
+                <div className="grid grid-cols-1 gap-4">
+                  <FormField
+                    label="Veli Telefon"
+                    type="tel"
+                    required
+                    value={pPhone}
+                    onChange={setPPhone}
+                    autoComplete="tel"
                     ringClass="focus:ring-secondary-500"
                   />
                 </div>

@@ -126,25 +126,33 @@ export async function registerTeacherLive(input: {
   email: string;
   password: string;
   city?: string;
+  phone?: string;
+  subject?: string;
+  licenses?: string;
+  file?: File | null;
 }): Promise<void> {
+  const formData = new FormData();
+  formData.append("kind", "teacher");
+  formData.append("fullName", input.fullName);
+  formData.append("email", input.email.trim());
+  formData.append("password", input.password);
+  if (input.city) formData.append("city", input.city);
+  if (input.phone) formData.append("phone", input.phone);
+  if (input.subject) formData.append("subject", input.subject);
+  if (input.licenses) formData.append("licenses", input.licenses);
+  if (input.file) formData.append("file", input.file);
+
   const res = await fetch("/api/auth/register", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      kind: "teacher",
-      fullName: input.fullName,
-      email: input.email.trim(),
-      password: input.password,
-      city: input.city,
-    }),
+    body: formData,
   });
   const json = (await res.json()) as { error?: string };
   if (!res.ok) throw new Error(json.error || "Kayıt başarısız.");
 }
 
 export async function registerStudentParentLive(input: {
-  student: { fullName: string; email: string; password: string };
-  parent: { fullName: string; email: string; password: string };
+  student: { fullName: string; email: string; password: string; phone?: string; grade?: string; };
+  parent: { fullName: string; email: string; password: string; phone?: string; };
   city?: string;
 }): Promise<void> {
   const res = await fetch("/api/auth/register", {
@@ -156,11 +164,14 @@ export async function registerStudentParentLive(input: {
         fullName: input.student.fullName,
         email: input.student.email.trim(),
         password: input.student.password,
+        phone: input.student.phone,
+        grade: input.student.grade,
       },
       parent: {
         fullName: input.parent.fullName,
         email: input.parent.email.trim(),
         password: input.parent.password,
+        phone: input.parent.phone,
       },
       city: input.city,
     }),

@@ -26,6 +26,10 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   avatar_url TEXT,
   bio TEXT,
   city VARCHAR(100),
+  phone VARCHAR(20),
+  subject VARCHAR(100),
+  licenses TEXT,
+  grade VARCHAR(20),
   hourly_rate DECIMAL(10,2),
   rating DECIMAL(3,2) DEFAULT 0.0,
   is_dnd_active BOOLEAN DEFAULT false,
@@ -112,13 +116,10 @@ DECLARE
   role_text text;
   full_nm text;
   prefix text;
-  attempts int := 0;
   new_code text;
-  inserted boolean := false;
 BEGIN
   role_text := COALESCE(NEW.raw_user_meta_data->>'role', 'student');
-  full_nm := COALESCE(NULLIF(trim(NEW.raw_user_meta_data->>'full_name'), ''), '');
-  IF full_nm = '' THEN full_nm := COALESCE(split_part(NEW.email, '@', 1), 'Kullanıcı'); END IF;
+  full_nm := COALESCE(NULLIF(trim(NEW.raw_user_meta_data->>'full_name'), ''), split_part(NEW.email, '@', 1), 'Kullanıcı');
 
   prefix := CASE role_text
     WHEN 'teacher' THEN 'TCH'
@@ -128,16 +129,25 @@ BEGIN
     ELSE 'USR'
   END;
 
-  WHILE attempts < 50 AND NOT inserted LOOP
-    attempts := attempts + 1;
-    new_code := prefix || '-' || LPAD((floor(random() * 10000))::int::text, 4, '0');
-    BEGIN
-      INSERT INTO public.profiles (id, role, profile_code, full_name, city)
-      VALUES (NEW.id, role_text::user_role, new_code, full_nm, NULLIF(trim(COALESCE(NEW.raw_user_meta_data->>'city', '')), ''));
-      inserted := true;
-    EXCEPTION WHEN unique_violation THEN NULL; END;
-  END LOOP;
+  new_code := prefix || '-' || LPAD((floor(random() * 10000))::int::text, 4, '0');
+  
+  INSERT INTO public.profiles (id, role, profile_code, full_name, city, email, phone, subject, licenses, grade)
+  VALUES (
+    NEW.id, 
+    role_text::public.user_role, 
+    new_code, 
+    full_nm, 
+    NULLIF(trim(COALESCE(NEW.raw_user_meta_data->>'city', '')), ''),
+    NEW.email,
+    NULLIF(trim(COALESCE(NEW.raw_user_meta_data->>'phone', '')), ''),
+    NULLIF(trim(COALESCE(NEW.raw_user_meta_data->>'subject', '')), ''),
+    NULLIF(trim(COALESCE(NEW.raw_user_meta_data->>'licenses', '')), ''),
+    NULLIF(trim(COALESCE(NEW.raw_user_meta_data->>'grade', '')), '')
+  );
 
+  RETURN NEW;
+EXCEPTION WHEN OTHERS THEN
+  RAISE LOG 'Profil oluşturulamadı: %', SQLERRM;
   RETURN NEW;
 END;
 $$;

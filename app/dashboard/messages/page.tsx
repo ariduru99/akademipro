@@ -221,12 +221,7 @@ const STORAGE_KEY_THREADS = "messages_threads_v1";
 const STORAGE_KEY_CONTACTS = "messages_contacts_v1";
 const STORAGE_KEY_NOTES = "messages_notes_v1";
 
-const defaultContacts: Contact[] = [
-  { id: 1, name: "Ali Yılmaz", role: "Öğrenci", lastMessage: "Hocam, ödevi sisteme yükledim.", time: "10:42", unread: 2, isOnline: true },
-  { id: 2, name: "Zeynep Kaya", role: "Öğrenci", lastMessage: "Yarınki ders saat kaçtaydı?", time: "Dün", unread: 0, isOnline: false },
-  { id: 3, name: "Ahmet Bey", role: "Veli (Ali)", lastMessage: "Teşekkürler hocam.", time: "Pzt", unread: 0, isOnline: true },
-  { id: 4, name: "LGS Matematik Grubu", role: "Grup (5 Kişi)", lastMessage: "Sınav sonuçları açıklandı.", time: "Pzt", unread: 0, isOnline: false },
-];
+const defaultContacts: Contact[] = [];
 
 const seedThreads: Record<number, ChatMessage[]> = {
   1: [
@@ -895,3 +890,4 @@ export default function MessagesPage() {
     </div>
   );
 }
+

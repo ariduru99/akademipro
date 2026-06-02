@@ -98,5 +98,55 @@
     "body": "Merhaba Tuğba! Bu bir test bildirimidir — kanallarınız çalışıyor.",
     "status": "error",
     "provider": "Resend"
+  },
+  {
+    "id": "b3ba8935-177c-4558-9fde-a989eedecff7",
+    "createdAt": "2026-06-02T15:34:51.825Z",
+    "channel": "email",
+    "to": "ariduru99@gmail.com",
+    "title": "Akademi Pro'ya Hoş Geldiniz!",
+    "body": "Merhaba Ramazan Arıduru,\n\nAkademi Pro platformuna öğretmen olarak başarıyla kayıt oldunuz. Artık sanal sınıflarınızı oluşturabilir, öğrencilerinizle etkileşime geçebilir ve ödemelerinizi takip edebilirsiniz.\n\nİyi dersler dileriz!",
+    "status": "queued",
+    "provider": "Outbox (simülasyon)"
+  },
+  {
+    "id": "f4c4e83d-b164-4265-9b1f-9e22503cca8c",
+    "createdAt": "2026-06-02T16:02:40.852Z",
+    "channel": "email",
+    "to": "ariduru99@gmail.com",
+    "title": "Akademi Pro'ya Hoş Geldiniz!",
+    "body": "Merhaba Ramazan Arıduru,\n\nAkademi Pro platformuna öğretmen olarak başarıyla kayıt oldunuz. Artık sanal sınıflarınızı oluşturabilir, öğrencilerinizle etkileşime geçebilir ve ödemelerinizi takip edebilirsiniz.\n\nİyi dersler dileriz!",
+    "status": "queued",
+    "provider": "Outbox (simülasyon)"
+  },
+  {
+    "id": "a9451e95-7f6b-4ebd-b87b-82f99d5c08bc",
+    "createdAt": "2026-06-02T16:04:49.020Z",
+    "channel": "email",
+    "to": "ramssar9@gmail.com",
+    "title": "Akademi Pro'ya Hoş Geldin!",
+    "body": "Merhaba ali veli,\n\nAkademi Pro platformuna hoş geldin! Öğretmeninin paylaştığı derslere katılabilir ve ödevlerini takip edebilirsin.",
+    "status": "queued",
+    "provider": "Outbox (simülasyon)"
+  },
+  {
+    "id": "3a59986f-d262-4ab0-b25f-1417cf93bbcf",
+    "createdAt": "2026-06-02T16:04:49.021Z",
+    "channel": "email",
+    "to": "neteksencnc@gmail.com",
+    "title": "Akademi Pro'ya Hoş Geldiniz!",
+    "body": "Sayın ali kim ki velikimki,\n\nAkademi Pro'ya hoş geldiniz. Çocuğunuz ali veli ile bağlantılı hesabınız oluşturuldu. Buradan ders programlarını ve ödeme durumlarını takip edebilirsiniz.",
+    "status": "queued",
+    "provider": "Outbox (simülasyon)"
+  },
+  {
+    "id": "e5761184-f1f0-46e5-ab9b-e2af15cc4b1c",
+    "createdAt": "2026-06-02T17:08:48.659Z",
+    "channel": "email",
+    "to": "ariduru99@gmail.com",
+    "title": "Akademi Pro'ya Hoş Geldiniz!",
+    "body": "Merhaba Ramazan Arıduru,\n\nAkademi Pro platformuna öğretmen olarak başarıyla kayıt oldunuz. Artık sanal sınıflarınızı oluşturabilir, öğrencilerinizle etkileşime geçebilir ve ödemelerinizi takip edebilirsiniz.\n\nİyi dersler dileriz!",
+    "status": "queued",
+    "provider": "Outbox (simülasyon)"
   }
 ]

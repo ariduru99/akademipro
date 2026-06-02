@@ -30,12 +30,7 @@ type Student = {
 
 const STORAGE_KEY = "students_data";
 
-const defaultStudents: Student[] = [
-  { id: 1, name: "Ali Yılmaz", parent: "Ahmet Yılmaz", phone: "+905551234567", email: "ali@example.com", grade: "8. Sınıf", courses: ["Matematik", "Fen"], status: "active" },
-  { id: 2, name: "Zeynep Kaya", parent: "Ayşe Kaya", phone: "+905559876543", email: "zeynep@example.com", grade: "12. Sınıf", courses: ["Fizik", "Geometri"], status: "active" },
-  { id: 3, name: "Can Özkan", parent: "Mehmet Özkan", phone: "+905554567890", email: "can@example.com", grade: "7. Sınıf", courses: ["Matematik"], status: "inactive" },
-  { id: 4, name: "Elif Çelik", parent: "Fatma Çelik", phone: "+905552223344", email: "elif@example.com", grade: "8. Sınıf", courses: ["Fen", "İngilizce"], status: "active" },
-];
+const defaultStudents: Student[] = [];
 
 export default function StudentsPage() {
   const [students, setStudents] = useState<Student[]>(defaultStudents);

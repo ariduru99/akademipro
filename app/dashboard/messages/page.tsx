@@ -286,7 +286,7 @@ function isFileMessage(m: ChatMessage): m is FileMessage {
 export default function MessagesPage() {
   const [contacts, setContacts] = useState<Contact[]>(defaultContacts);
   const [threads, setThreads] = useState<Record<number, ChatMessage[]>>(seedThreads);
-  const [activeId, setActiveId] = useState(defaultContacts[0].id);
+  const [activeId, setActiveId] = useState(defaultContacts[0]?.id ?? -1);
   const [message, setMessage] = useState("");
   const [hydrated, setHydrated] = useState(false);
   const [notesByContact, setNotesByContact] = useState<Record<number, string>>({});
